@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
+import SecretChatDetails from '../component/SystemDetails/SecretChatroom';
 export default function TargetInterceptor() {
   const toast= useToast();
   const [messageId, setMessageId] = useState("");
@@ -52,7 +53,7 @@ export default function TargetInterceptor() {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto p-6">
+    <div className="w-full max-w-lg mx-auto p-6 grid gap-10">
       
       {/* TERMINAL CONTAINER */}
       <div className="bg-[#050505] border border-green-900/50 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
@@ -125,6 +126,8 @@ export default function TargetInterceptor() {
         )}
 
       </div>
+
+      <SecretChatDetails/>
     </div>
   );
 }

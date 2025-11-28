@@ -4,9 +4,10 @@ import { supabase } from '@/lib/supabaseClient';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '@/app/context/ToastContext'; // Adjusted path to use absolute import
+
 export default function LoginPage() {
-  const toast =useToast();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,20 +40,21 @@ export default function LoginPage() {
 
       if (error) {
         console.error('❌ Sign-in failed:', error.message);
-        toast.error('Login Failed: ' + error.message);
-        setLoading(false); // Stop loading so they can try again
+        toast.error('Login Failed: ' + error.message); // TOAST ON FAILURE
+        setLoading(false); 
         return; // STOP EXECUTION HERE
       }
 
       // 3. Only Redirect if Successful
       if (data.session) {
-        toast.success('✅ Sign-in successful!');
+        toast.success('Agent Access Granted!'); // TOAST ON SUCCESS
         router.push('/dashboard');
         router.refresh();
       }
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("Unexpected Error:", err);
+      toast.error('System error occurred.');
       setLoading(false);
     }
   };
@@ -138,7 +140,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Login Button - FIXED (Removed <Link> wrapper) */}
+            {/* Login Button */}
             <button 
               type="submit" 
               disabled={loading}

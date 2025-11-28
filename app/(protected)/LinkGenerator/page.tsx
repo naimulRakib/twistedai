@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { v4 as uuidv4 } from 'uuid'; // Import the UUID generator
+import { v4 as uuidv4 } from 'uuid'; 
 
-import UrlShortener from '@/app/component/UrlShortener';
+
 const LinkGenerator = () => {
     const [linkId, setLinkId] = useState("");
     const [generatedLink, setGeneratedLink] = useState("");
@@ -79,7 +79,7 @@ const LinkGenerator = () => {
         </div>
 
         {/* 2. Text Content */}
-        <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Generate New Link & Shortener</h2>
+        <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Generate New Channel</h2>
         <p className="text-slate-400 mb-10 max-w-md text-center leading-relaxed">
           Create a unique, traceable link for your Instagram Story or TikTok Bio.
         </p>
@@ -126,8 +126,11 @@ const LinkGenerator = () => {
               >
                 COPY LINK
               </button>
+            
+            
             </div>
             
+             <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider mt-4 ">Need Short Link? Use Shorten URL option</p>
             <div className="mt-4 flex items-center justify-between text-[10px] text-slate-500 font-medium uppercase tracking-widest px-1">
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
@@ -140,7 +143,7 @@ const LinkGenerator = () => {
 
       </div>
       <br />
-      <UrlShortener/>
+     
     </div>
   );
 

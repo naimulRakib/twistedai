@@ -107,7 +107,7 @@ export default function ShareCardGenerator() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-start animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-start animate-in fade-in slide-in-from-bottom-4 duration-500 ">
       
       {/* --- LEFT: CONTROL PANEL --- */}
       <div className="bg-[#0a0a0a] border border-white/10 rounded-3xl p-8 shadow-2xl order-2 lg:order-1">
@@ -120,9 +120,9 @@ export default function ShareCardGenerator() {
         <div className="space-y-6">
             
             {/* 1. Link Input with Copy Button */}
-            <div className="space-y-2">
+            <div className="space-y-2 ">
                 <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Your Secret Link (Required)</label>
-                <div className="flex gap-2">
+                <div className="grid gap-2">
                     <input 
                         type="text" 
                         value={linkUrl}
@@ -132,7 +132,7 @@ export default function ShareCardGenerator() {
                     />
                     <button 
                         onClick={handleCopyLink}
-                        className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 rounded-xl transition-colors text-xs uppercase tracking-wider border border-white/5"
+                        className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 p-4 rounded-xl transition-colors text-xs uppercase tracking-wider border border-white/5"
                     >
                         {copyStatus}
                     </button>

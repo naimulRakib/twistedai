@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { generateSlug } from '../utils/generateSlug'; 
-import UrlShortener from './UrlShortener';
+ 
 const LinkGenerator = () => {
     const [generatedLink, setGeneratedLink] = useState("");
     const [linkName, setLinkName] = useState("");
@@ -151,8 +151,7 @@ const LinkGenerator = () => {
                     )}
                 </div>
             </div>
-            <br /><br />
-            <UrlShortener/>
+           
         </div>
     );
 };

@@ -3,9 +3,9 @@
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { generateAndSaveImageAction, generateSuggestedRepliesAction } from '../actions';
-import { useToast } from '../context/ToastContext';
-
+import { generateAndSaveImageAction, generateSuggestedRepliesAction } from '../../actions';
+import { useToast } from '@/app/context/ToastContext';
+import HavingTrouble from '../../component/SystemDetails/HavingTrouble'
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -15,7 +15,7 @@ const supabase = createClient(
 const MODEL_OPTIONS = [
   { id: 'nebius-flux', label: 'Flux', desc: 'Nebius (Best)' },
   { id: 'cf-flux', label: 'Flux', desc: 'Cloudflare' },
-  { id: 'cf-sdxl', label: '⚡ SDXL', desc: 'Cloudflare (Fast)' },
+  { id: 'cf-sdxl', label: '⚡ SDXL', desc: 'Cloudflare (Recommended)' },
   { id: 'cf-dreamshaper', label: '3D', desc: 'Cloudflare' },
   { id: 'pollinations-turbo', label: '🚀 Turbo', desc: 'Pollinations (Free)' },
   { id: 'pollinations-dark', label: '🌑 Dark', desc: 'Pollinations' },
@@ -352,8 +352,8 @@ function CardGeneratorContent() {
                 </div>
             </div>
         </div>
-      )}
-
+      )} <br /> <br />
+<HavingTrouble/>
     </div>
   );
 }

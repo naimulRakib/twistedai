@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import MapDisplay from './MapDisplay'; // Ensure this component exists
 import SpyMasterSearch from './SpyMaster';
 import { useToast } from '../context/ToastContext';
+import SpyDetails from './SystemDetails/SpyDetails';
 // --- CONFIGURATION ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -215,6 +216,8 @@ const SpyReportViewer: React.FC = () => {
         ) : null}
       </div>
 <SpyMasterSearch/>
+<br /><br />
+<SpyDetails/>
     </div>
   );
 };

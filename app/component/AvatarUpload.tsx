@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
 import { useToast } from '../context/ToastContext';
 import { supabase } from '@/lib/supabaseClient';
 interface Props {

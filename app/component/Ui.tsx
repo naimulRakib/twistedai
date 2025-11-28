@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import LinkGenerator from './LinkGenerator';
-import GuestLoginButton from '../fakesignin/page'; // Adjust path as needed
 
+
+import CartoonFeatures from './SystemDetails/CartoonFeautures';
 export default function HomeUI() {
   return (
     <div className="min-h-screen bg-[#030303] text-white font-sans selection:bg-purple-500 selection:text-white relative overflow-x-hidden">
@@ -89,14 +89,14 @@ export default function HomeUI() {
             {/* Primary CTA: Sign Up */}
             <Link href="/signup" className="w-full sm:w-auto">
               <button className="w-full px-8 py-4 bg-white text-black text-lg font-bold rounded-xl hover:scale-105 transition-transform shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2">
-                Get My Link
+                Get My Link / Sign Up
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
               </button>
             </Link>
 
             {/* Secondary CTA: Instant Access */}
             <div className="w-full sm:w-auto">
-               <GuestLoginButton/>
+           
             </div>
           </div>
           
@@ -183,7 +183,7 @@ export default function HomeUI() {
         </div>
       </div>
 
-    
+    <CartoonFeatures/>
 
     </div>
   );

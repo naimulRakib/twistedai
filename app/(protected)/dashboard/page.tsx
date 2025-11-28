@@ -12,7 +12,7 @@ import ProfileImage from '@/app/component/ProfileImage';
 import ShareCard from '@/app/component/ShareCard';
 import TargetInterceptor from '@/app/component/TargetInterceptor';
 import DashboardOverview from '@/app/component/Overview';
-
+import UrlShortener from '@/app/component/UrlShortener';
 // --- MOCK DATA (Fallback) ---
 const stats = [
   { label: 'Total Views', value: '0', change: '+0%', icon: '👁️' },
@@ -152,8 +152,13 @@ export default function DashboardPage() {
 
       case 'Smart Reply':
         return <SpyReportViewer/>;
-
-      case 'Settings':
+        case 'Share Card':
+        return  <ShareCard />; 
+        case 'Anonymous Chat':
+          return <TargetInterceptor/>;
+          case 'Shorten URL':
+            return <UrlShortener/>;
+             case 'Settings':
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in space-y-10">
                 <div className="text-center">
@@ -181,10 +186,8 @@ export default function DashboardPage() {
                
             </div>
         );
-        case 'Share Card':
-        return  <ShareCard />; // Passing empty slug for now, fix by fetching latest slug if needed
-        case 'Anonymous Chat':
-          return <TargetInterceptor/>
+
+
       default:
         return (
           <div className="flex items-center justify-center h-[50vh] text-gray-500 animate-in fade-in">
@@ -248,11 +251,14 @@ export default function DashboardPage() {
             {[
                 { name: 'Overview', icon: '📊' },
                 { name: 'Inbox', icon: '📨', badge: 3 },
-                { name: 'Link History', icon: '🔗' },
+              
                 { name: 'Create Link', icon: '➕' },
-                { name: 'Settings', icon: '⚙️' },
+
                  { name: 'Share Card', icon: '👀' },
                  { name: 'Anonymous Chat', icon: '💬' },
+                  { name: 'Shorten URL', icon: ' ✂️' },
+                    { name: 'Link History', icon: '🔗' },
+                                  { name: 'Settings', icon: '⚙️' },
             ].map((item) => (
                 <button 
                     key={item.name}

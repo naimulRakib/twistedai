@@ -4,9 +4,8 @@ import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import GetLocation from './GetLocation';
-// Mock import for your file structure (Keep your original import)
+// Mock import for your file structure
 import UserLocationData from '../Json/JsonData.json';
-// import GetLocation from './GetLocation'; // Uncomment when using your actual file
 
 // --- TYPES ---
 interface Location {
@@ -27,14 +26,19 @@ interface MapDisplayProps {
   initialZoom?: number;
 }
 
+// Props for the navigation component
+interface ManualNavigationProps {
+  onNavigate: (lat: number, lng: number) => void;
+}
+
 // --- STYLES ---
 const styles = {
   map: { height: '50vh', width: '50%' },
   controlPanel: {
     position: 'absolute' as const,
     top: 10,
-    right: 10, // Moved to right to avoid overlap with Zoom controls usually on left
-    zIndex: 1000, // Ensures it sits above map tiles
+    right: 10,
+    zIndex: 1000,
     background: 'white',
     padding: '12px',
     borderRadius: '8px',
@@ -47,6 +51,7 @@ const styles = {
     padding: '6px',
     border: '1px solid #ccc',
     borderRadius: '4px',
+    color: 'black'
   },
   button: {
     backgroundColor: '#4CAF50',
@@ -69,7 +74,6 @@ const FlyToButton: FC<{ lat: number; lng: number; label?: string }> = ({ lat, ln
   
   const handleZoom = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent click from bubbling
-    // Use flyTo for smooth animation, 18 is usually max zoom for OSM
     map.flyTo([lat, lng], 18, { duration: 1.5 });
   };
 
@@ -83,13 +87,13 @@ const FlyToButton: FC<{ lat: number; lng: number; label?: string }> = ({ lat, ln
 /**
  * Control panel to manually enter coordinates
  */
-const ManualNavigation = () => {
+const ManualNavigation: FC<ManualNavigationProps> = ({ onNavigate }) => {
   const map = useMap();
-  const [lat, setLat] = useState<string>("23.81"); // Use string for inputs to handle decimals better
+  const [lat, setLat] = useState<string>("23.81");
   const [lng, setLng] = useState<string>("90.41");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Prevent map interactions (dragging/double click) when interacting with this form
+  // Prevent map interactions when typing in inputs
   useEffect(() => {
     if (containerRef.current) {
       L.DomEvent.disableClickPropagation(containerRef.current);
@@ -100,8 +104,12 @@ const ManualNavigation = () => {
   const handlePan = () => {
     const numLat = parseFloat(lat);
     const numLng = parseFloat(lng);
+    
     if (!isNaN(numLat) && !isNaN(numLng)) {
+      // 1. Move the map
       map.flyTo([numLat, numLng], 14);
+      // 2. Trigger the marker creation in the parent
+      onNavigate(numLat, numLng);
     } else {
       alert("Invalid Coordinates");
     }
@@ -109,7 +117,7 @@ const ManualNavigation = () => {
 
   return (
     <div ref={containerRef} style={styles.controlPanel}>
-      <strong style={{ fontSize: '0.9rem' }}>Manual Nav</strong>
+      <strong style={{ fontSize: '0.9rem', color: 'black' }}>Manual Nav</strong>
       <input 
         type="number" 
         placeholder="Lat"
@@ -141,6 +149,7 @@ const MapDisplay: FC<MapDisplayProps> = ({
 }) => {
   
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [manualLocation, setManualLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Optimize data loading
   const userData = useMemo(() => {
@@ -160,10 +169,10 @@ const MapDisplay: FC<MapDisplayProps> = ({
         attribution='&copy; OpenStreetMap contributors'
       />
 
-      {/* 2. UI Controls (Must be children of MapContainer) */}
-      <ManualNavigation />
+      {/* 2. UI Controls - Now passes the setManualLocation function */}
+      <ManualNavigation onNavigate={(lat, lng) => setManualLocation({ lat, lng })} />
 
-      {/* 3. Current User Position (from GetLocation) */}
+      {/* 3. Current User Position (GPS) */}
       <GetLocation onLocationFound={setUserPos} /> 
       
       {userPos && (
@@ -173,12 +182,27 @@ const MapDisplay: FC<MapDisplayProps> = ({
           pathOptions={{ color: 'blue', fillColor: '#2196F3', fillOpacity: 1 }}
         >
           <Popup>
-            <strong>You are here</strong>
+            <strong>You are here (GPS)</strong>
           </Popup>
         </CircleMarker>
       )}
 
-      {/* 4. Render JSON Data Users */}
+      {/* 4. Manual Navigation Marker (The requested feature) */}
+      {manualLocation && (
+        <CircleMarker
+          center={[manualLocation.lat, manualLocation.lng]}
+          radius={12}
+          pathOptions={{ color: 'green', fillColor: '#4CAF50', fillOpacity: 0.8 }}
+        >
+          <Popup>
+            <strong>Manual Destination</strong><br/>
+            Lat: {manualLocation.lat}<br/>
+            Lng: {manualLocation.lng}
+          </Popup>
+        </CircleMarker>
+      )}
+
+      {/* 5. Render JSON Data Users */}
       {userData.map((user) => (
         <CircleMarker
           key={user.userId}
