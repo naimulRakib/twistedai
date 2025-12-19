@@ -3,12 +3,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function ShareCardGenerator() {
+// --- PROPS INTERFACE ---
+interface ShareCardProps {
+  username?: string;
+  avatarUrl?: string | null;
+}
+
+export default function ShareCardGenerator({ username, avatarUrl }: ShareCardProps) {
   
   // --- STATE ---
-  const [displayName, setDisplayName] = useState("");
+  const [displayName, setDisplayName] = useState(username || "");
   const [linkUrl, setLinkUrl] = useState("");
-  const [profileImage, setProfileImage] = useState("");
+  const [profileImage, setProfileImage] = useState(avatarUrl || "");
   const [coverImage, setCoverImage] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [copyStatus, setCopyStatus] = useState("Copy Link");
@@ -17,11 +23,14 @@ export default function ShareCardGenerator() {
   const fileInputRefProfile = useRef<HTMLInputElement>(null);
   const fileInputRefCover = useRef<HTMLInputElement>(null);
 
-  // --- AUTO-FETCH USERNAME & AVATAR ONLY ---
+  // --- ⚡ AUTO-FETCH REAL USER DATA ---
   useEffect(() => {
     const fetchUserData = async () => {
+      // 1. Get Logged In User
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (user) {
+        // 2. Fetch Profile (Real Name & Avatar)
         const { data: profile } = await supabase
           .from('profiles')
           .select('username, avatar_url')
@@ -32,10 +41,32 @@ export default function ShareCardGenerator() {
           if (profile.username) setDisplayName(profile.username);
           if (profile.avatar_url) setProfileImage(profile.avatar_url);
         }
+
+        // 3. Fetch Their Link (So they don't have to type it!)
+        const { data: links } = await supabase
+          .from('links')
+          .select('id')
+          .eq('creator_user_id', user.id)
+          .limit(1);
+
+        if (links && links.length > 0) {
+          // Construct the full URL automatically
+          setLinkUrl(`${window.location.origin}/p/${links[0].id}`);
+        }
       }
     };
-    fetchUserData();
+
+    // If props are missing, try to fetch. If props exist, rely on the useEffect below.
+    if (!username && !avatarUrl) {
+        fetchUserData();
+    }
   }, []);
+
+  // --- AUTO-UPDATE IF PROPS CHANGE (For parent component updates) ---
+  useEffect(() => {
+      if (username) setDisplayName(username);
+      if (avatarUrl) setProfileImage(avatarUrl);
+  }, [username, avatarUrl]);
 
   // --- HANDLERS ---
 
@@ -52,7 +83,7 @@ export default function ShareCardGenerator() {
   };
 
   const handleCopyLink = () => {
-    if (!linkUrl) return alert("Please enter your link first!");
+    if (!linkUrl) return alert("No link found. Create one first!");
     navigator.clipboard.writeText(linkUrl);
     setCopyStatus("COPIED! ✅");
     setTimeout(() => setCopyStatus("Copy Link"), 2000);
@@ -131,14 +162,14 @@ export default function ShareCardGenerator() {
 
         <div className="space-y-6">
             
-            {/* Link Input (Manual) */}
-            <div className="space-y-2 ">
+          {/* Link Input (Manual Mode) */}
+            <div className="space-y-2">
                 <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Paste Your Link</label>
                 <div className="grid gap-2">
                     <input 
                         type="text" 
                         value={linkUrl}
-                        onChange={(e) => setLinkUrl(e.target.value)}
+                        onChange={(e) => setLinkUrl(e.target.value)} /* 👈 Allows manual typing */
                         placeholder="twst.fun/p/..."
                         className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-emerald-500/50 outline-none transition-all placeholder-gray-700 font-mono text-sm"
                     />
@@ -243,24 +274,24 @@ export default function ShareCardGenerator() {
         
         <div className="relative group">
             {/* Ambient Glow */}
-            <div className="absolute -inset-4 bg-gradient-to-b from-purple-600 to-emerald-600 rounded-[50px] blur-2xl opacity-20 group-hover:opacity-40 transition duration-700"></div>
+            <div className="absolute -inset-4 bg-gradient-to-b from-purple-900 to-indigo-900 rounded-[50px] blur-2xl opacity-30 group-hover:opacity-50 transition duration-700"></div>
 
             {/* --- ACTUAL CARD TO CAPTURE --- */}
             <div 
                 ref={cardRef}
                 className="relative w-[320px] h-[568px] bg-black rounded-[32px] overflow-hidden flex flex-col items-center text-center shadow-2xl border border-white/10"
                 style={{
-                    // --- NORMAL COLORFUL BG ---
-                    // Using a vibrant gradient instead of an image for a cleaner "Story" look
+                    // --- DARKISH BACKGROUND ---
+                    // Deep dark gradient
                     backgroundImage: coverImage 
                       ? `url(${coverImage})` 
-                      : 'linear-gradient(135deg, #f43f5e 0%, #a855f7 50%, #3b82f6 100%)', 
+                      : 'linear-gradient(to bottom, #0f172a, #312e81, #4c1d95)', 
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                 }}
             >
                 {/* Subtle Grain Overlay */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-30"></div>
 
                 {/* Content Layer */}
                 <div className="relative z-10 flex flex-col h-full w-full p-8">
@@ -270,17 +301,17 @@ export default function ShareCardGenerator() {
                         <h1 className="text-2xl font-black italic tracking-tighter text-white drop-shadow-md">
                             TWST.FUN
                         </h1>
-                        <p className="text-[8px] font-mono text-white/80 tracking-[0.4em] uppercase mt-1">
+                        <p className="text-[8px] font-mono text-white/70 tracking-[0.4em] uppercase mt-1">
                             Anonymous Inbox
                         </p>
                     </div>
 
                     {/* Center Content */}
-                    <div className="flex flex-col items-center gap-6 my-auto w-full">
+                    <div className="flex flex-col items-center gap-4 my-auto w-full">
                         
                         {/* Profile Pic with Glow */}
                         <div className="relative">
-                            <div className="w-24 h-24 rounded-full p-[3px] bg-white relative z-10 shadow-xl">
+                            <div className="w-24 h-24 rounded-full p-[3px] bg-white/90 relative z-10 shadow-xl">
                                 <img 
                                     src={profileImage || `https://api.dicebear.com/9.x/identicon/svg?seed=${displayName || 'Twisted'}`} 
                                     className="w-full h-full rounded-full object-cover bg-black"
@@ -290,43 +321,33 @@ export default function ShareCardGenerator() {
                             </div>
                         </div>
 
-                        {/* Glass Question Box */}
-                        <div className="bg-white/20 backdrop-blur-xl border border-white/30 p-6 rounded-3xl w-full shadow-lg relative overflow-hidden">
-                            <h2 className="text-xl font-bold text-white leading-tight drop-shadow-md">
-                                Send me a <br/> <span className="font-black text-2xl">SECRET MESSAGE</span>
-                            </h2>
-                            <p className="text-[10px] text-white/80 mt-2 font-bold tracking-wide uppercase bg-black/20 inline-block px-2 py-1 rounded">
-                                🕵️ I won't know it's you
-                            </p>
-                        </div>
-
-                        {/* Name Tag */}
-                        <div className="bg-white/20 px-6 py-2 rounded-full border border-white/20 shadow-lg backdrop-blur-md">
+                        {/* Name Tag - MOVED NEAR PROFILE */}
+                        <div className="bg-white/10 px-6 py-2 rounded-full border border-white/10 shadow-lg backdrop-blur-md -mt-2 relative z-20">
                             <p className="text-sm font-bold text-white">
                                 @{displayName || "Twisted Agent"}
                             </p>
                         </div>
+
+                        {/* Glass Question Box */}
+                        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl w-full shadow-lg relative overflow-hidden mt-2">
+                            <h2 className="text-xl font-bold text-white leading-tight drop-shadow-md">
+                                Send me a <br/> <span className="font-black text-2xl text-emerald-300">SECRET MESSAGE</span>
+                            </h2>
+                            <p className="text-[10px] text-white/70 mt-2 font-bold tracking-wide uppercase bg-black/20 inline-block px-2 py-1 rounded">
+                                🕵️ I won't know it's you
+                            </p>
+                        </div>
+
                     </div>
 
-                    {/* Bottom CTA (Sticker Zone) */}
-                    <div className="mt-auto pt-6 animate-bounce relative z-20 w-full">
-                         <div className="flex flex-col items-center gap-2">
-                            {/* Sticker Placeholder Box */}
-                            <div className="bg-white text-black border-2 border-dashed border-black/20 px-6 py-3 rounded-xl shadow-lg w-full max-w-[200px] flex items-center justify-center gap-2">
-                                <span className="text-xl">🔗</span>
-                                <div className="text-left">
-                                    <p className="text-[8px] font-black uppercase tracking-widest text-gray-500 leading-none mb-0.5">
-                                        STICKER HERE
-                                    </p>
-                                    <p className="text-[10px] font-bold leading-none">
-                                        Tap to Reply
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            {/* Arrow */}
-                            <svg className="w-6 h-6 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                    {/* Bottom CTA (BLANK STICKER BOX) */}
+                    <div className="mt-auto pt-6  relative z-20 w-full flex flex-col items-center gap-3">
+                         {/* BLANK BOX for Sticker */}
+                         <div className="bg-white/80 backdrop-blur-sm border-2 border-dashed border-white/50 rounded-xl shadow-lg w-full max-w-[260px] h-14">
                          </div>
+                            
+                         {/* Arrow */}
+                         <svg className="w-6 h-6 text-white/70 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
                     </div>
 
                 </div>
