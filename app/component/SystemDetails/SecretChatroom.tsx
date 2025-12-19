@@ -98,7 +98,7 @@ const SecurityExplainer = () => {
         {/* CTA Section */}
         <div className="mt-16 text-center">
           
-          <p className="mt-4 text-xs text-slate-500">Encryption twistedapp</p>
+          <p className="mt-4 text-xs text-slate-500">Encryption twistFun</p>
         </div>
 
       </div>

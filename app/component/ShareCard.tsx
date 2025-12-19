@@ -127,7 +127,7 @@ export default function ShareCardGenerator() {
                         type="text" 
                         value={linkUrl}
                         onChange={(e) => setLinkUrl(e.target.value)}
-                        placeholder="twisted.ai/m/xyz..."
+                        placeholder="twst.fun/m/xyz..."
                         className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-emerald-500/50 outline-none transition-all placeholder-gray-700"
                     />
                     <button 
@@ -249,7 +249,7 @@ export default function ShareCardGenerator() {
                     
                     {/* Branding */}
                     <div className="text-[10px] font-mono text-white/50 uppercase tracking-[0.3em] mb-auto">
-                        Twisted.ai
+                        Twst.fun
                     </div>
 
                     {/* Center */}

@@ -7,9 +7,17 @@ interface Props {
   importedMessage?: string; 
 }
 
+// --- HELPER: Cleans tags for Visual Display only ---
+const cleanContent = (text: string) => {
+  if (!text) return "";
+  // Removes [LAUGH], [ROAST], etc. from the start of the string
+  return text.replace(/^\[(LAUGH|ROAST|QUESTION|IDEA|LETTER|SECRET)\]\s*/i, '');
+};
+
 export default function CardGenerator({ importedMessage }: Props) {
   
   // --- STATE ---
+  // 'message' retains the RAW content (including [TAG]) so AI can read it
   const [message, setMessage] = useState("");
   const [reply, setReply] = useState("");
   const [handle, setHandle] = useState("@user"); // Default handle
@@ -28,12 +36,14 @@ export default function CardGenerator({ importedMessage }: Props) {
     }
   }, [importedMessage]);
 
-  // --- LOGIC HANDLERS (Same as before) ---
+  // --- LOGIC HANDLERS ---
   const handleAiTextReply = async () => {
     if (!message || message.length < 2) return alert("Message too short for AI.");
     setIsGeneratingText(true);
     setSuggestions([]);
     try {
+        // We pass the RAW 'message' here (including [LAUGH]) 
+        // so the AI knows the context/tone.
         const aiReplies = await generateSuggestedRepliesAction(message);
         setSuggestions(aiReplies);
     } catch (error) {
@@ -52,6 +62,7 @@ export default function CardGenerator({ importedMessage }: Props) {
     if (!message || !reply) return alert("Fill in all fields.");
     setIsGeneratingImage(true);
     try {
+      // We also pass the RAW message to image generator so it knows the mood
       const designPrompt = await generatePromptAction(message, reply);
       const publicImageUrl = await generateAndSaveImageAction(designPrompt, message, reply);
       setBackgroundImage(publicImageUrl);
@@ -245,8 +256,9 @@ export default function CardGenerator({ importedMessage }: Props) {
                         
                         {/* Question Bubble */}
                         <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl shadow-lg transform rotate-1">
+                            {/* HERE WE USE cleanContent SO THE TAG DOES NOT SHOW IN THE IMAGE */}
                             <p className="text-lg font-bold text-white leading-relaxed drop-shadow-md">
-                                {importedMessage || message || 'Waiting for secret...'}
+                                {cleanContent(importedMessage || message) || 'Waiting for secret...'}
                             </p>
                         </div>
 

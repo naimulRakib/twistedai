@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { generateAndSaveImageAction, generateSuggestedRepliesAction } from '../../actions';
 import { useToast } from '@/app/context/ToastContext';
-import HavingTrouble from '../../component/SystemDetails/HavingTrouble'
+import HavingTrouble from '../../component/SystemDetails/HavingTrouble';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,6 +32,13 @@ const FRAME_OPTIONS = [
   { id: 'paper', label: 'Pen-Paper', bgClass: 'bg-[#f4f4f0]', textClass: 'text-gray-900' },
 ];
 
+// --- HELPER: Cleans tags for Visual Display only ---
+const cleanContent = (text: string) => {
+  if (!text) return "";
+  // Removes [LAUGH], [ROAST], etc. from the start of the string for display
+  return text.replace(/^\[(LAUGH|ROAST|QUESTION|IDEA|LETTER|SECRET)\]\s*/i, '');
+};
+
 function CardGeneratorContent() {
   const toast = useToast();
   const searchParams = useSearchParams();
@@ -39,6 +46,7 @@ function CardGeneratorContent() {
   const importedReply = searchParams.get('reply');
   
   // --- STATE ---
+  // 'message' retains the RAW content (including [TAG]) so AI can read it
   const [message, setMessage] = useState(importedMessage || "");
   const [reply, setReply] = useState(importedReply || "");
   const [handle, setHandle] = useState("@user");
@@ -66,6 +74,29 @@ function CardGeneratorContent() {
     if (importedMessage) setMessage(importedMessage);
     if (importedReply) setReply(importedReply);
   }, [importedMessage, importedReply]);
+
+  // --- NEW: FETCH USERNAME LOGIC ---
+  useEffect(() => {
+    const fetchUsername = async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (data && data.username) {
+                    setHandle(`@${data.username}`);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching username:", error);
+        }
+    };
+    fetchUsername();
+  }, []);
 
   const getFontSize = (text: string, type: 'message' | 'reply') => {
     const len = text.length;
@@ -117,6 +148,7 @@ function CardGeneratorContent() {
     setIsGeneratingText(true);
     setSuggestions([]); 
     try {
+        // Pass RAW message (with tag) to AI so it knows context
         const aiReplies = await generateSuggestedRepliesAction(message);
         setSuggestions(aiReplies);
     } catch (error) { console.error(error); } finally { setIsGeneratingText(false); }
@@ -126,6 +158,7 @@ function CardGeneratorContent() {
     if (!message || !reply) return toast.info("Please Sign Up or Fill in all fields.");
     setIsGeneratingImage(true);
     try {
+      // Pass RAW message (with tag) to AI Image Generator
       const publicImageUrl = await generateAndSaveImageAction(userPrompt, message, reply, selectedModel);
       setBackgroundImage(publicImageUrl);
     } catch (e) { console.error(e); } finally { setIsGeneratingImage(false); }
@@ -150,12 +183,10 @@ function CardGeneratorContent() {
        const html2canvas = (await import('html2canvas-pro')).default;
        const canvas = await html2canvas(cardRef.current, { useCORS: true, scale: 3, backgroundColor: null });
        
-       // Convert to blob for sharing
        canvas.toBlob(async (blob) => {
          if (!blob) return;
          const file = new File([blob], "story.png", { type: "image/png" });
          
-         // Use Web Share API Level 2 (Files)
          if (navigator.canShare && navigator.canShare({ files: [file] })) {
            await navigator.share({
              files: [file],
@@ -220,7 +251,7 @@ function CardGeneratorContent() {
                         <input type="text" value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="@username" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500/50 outline-none" />
                     </div>
 
-                    {/* AI Model Selector (UPDATED GRID) */}
+                    {/* AI Model Selector */}
                     <div>
                         <label className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-2 block">AI Model</label>
                         <div className="grid grid-cols-3 gap-2">
@@ -241,10 +272,12 @@ function CardGeneratorContent() {
                         </div>
                     </div>
 
+                    {/* Message Input (Read Only) */}
                      <div className="relative grid gap-2">
                           <label className="text-xs font-mono text-gray-400 uppercase">Message</label>
                         <input 
                             type="text"
+                            // We show raw message here so user knows what they received
                             value={message} 
                             disabled={true}
                             className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500/50 outline-none text-sm"
@@ -319,8 +352,9 @@ function CardGeneratorContent() {
                     
                     <div className="relative z-10 flex flex-col h-full justify-center space-y-6">
                         <div className={`p-6 shadow-lg transform rotate-1 transition-all ${selectedFrame === 'social' ? 'bg-white rounded-3xl text-black text-center' : selectedFrame === 'paper' ? 'bg-white border-2 border-black text-black font-mono rounded-none' : 'bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white'}`}>
-                            <p className={`${getFontSize(importedMessage || message || "Waiting...", 'message')} font-bold break-words leading-snug`}>
-                                {importedMessage || message || 'Waiting for secret...'}
+                            {/* --- CLEAN CONTENT USED HERE FOR VISUAL DISPLAY --- */}
+                            <p className={`${getFontSize(cleanContent(importedMessage || message) || "Waiting...", 'message')} font-bold break-words leading-snug`}>
+                                {cleanContent(importedMessage || message) || 'Waiting for secret...'}
                             </p>
                         </div>
 
@@ -333,15 +367,30 @@ function CardGeneratorContent() {
                     </div>
 
                     <div className="relative z-10 mt-auto pt-4 text-center">
-                        <div className={`inline-block px-3 py-1 rounded-full ${selectedFrame === 'social' ? 'bg-white/20 backdrop-blur-md text-white' : selectedFrame === 'paper' ? 'bg-black text-white' : 'bg-black/50 backdrop-blur-sm border border-white/10 text-gray-400'}`}>
-                            <p className="text-[9px] uppercase tracking-[0.2em] font-bold">Twisted.ai</p>
-                        </div>
+                       <div 
+  className={`
+    relative group overflow-hidden inline-flex items-center justify-center px-5 py-1.5 rounded-full transition-all duration-300 ease-out cursor-pointer
+    ${selectedFrame === 'social' 
+      ? 'bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] text-white ring-1 ring-white/10' 
+      : selectedFrame === 'paper' 
+        ? 'bg-zinc-950 border border-zinc-800 text-white shadow-xl' 
+        : 'bg-black/30 backdrop-blur-sm border border-white/5 text-zinc-500 hover:bg-black/50 hover:text-zinc-300 hover:border-white/10'}
+  `}
+>
+  {/* Inner Glow / Shine Effect */}
+  <div className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] ${selectedFrame === 'social' ? 'block' : 'hidden'}`} />
+
+  {/* Text Content */}
+  <p className="relative z-10 text-[10px] uppercase tracking-[0.25em] font-black drop-shadow-md bg-clip-text">
+    Twst.fun
+  </p>
+</div>
                     </div>
                 </div>
             </div>
 
-            {/* --- ACTION BUTTONS (Updated with Share) --- */}
-            {backgroundImage && (
+            {/* --- ACTION BUTTONS --- */}
+            {reply && (
                 <div className="flex gap-3 w-full max-w-[340px]">
                     <button 
                         onClick={downloadCard} 
@@ -351,7 +400,6 @@ function CardGeneratorContent() {
                         Save
                     </button>
                     
-                    {/* --- NEW SHARE BUTTON --- */}
                     <button 
                         onClick={shareCard} 
                         className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 hover:shadow-lg hover:shadow-pink-500/30 text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 text-sm group"
@@ -365,7 +413,7 @@ function CardGeneratorContent() {
 
       </div>
 
-      {/* --- MODAL (Kept Same) --- */}
+      {/* --- MODAL --- */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
@@ -401,8 +449,10 @@ function CardGeneratorContent() {
                 </div>
             </div>
         </div>
-      )} <br /> <br />
-<HavingTrouble/>
+      )} 
+      
+      <br /><br />
+      <HavingTrouble/>
     </div>
   );
 }

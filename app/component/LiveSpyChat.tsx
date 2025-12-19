@@ -8,8 +8,6 @@ import { generateClientMasterId } from '../utils/clientMasterId';
 import { supabase } from '@/lib/supabaseClient';
  
 // --- TYPES ---
-// Removed ExtendedNavigator interface to fix build error
-
 interface ChatMessage {
   id: number;
   created_at: string;
@@ -65,8 +63,6 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
       if (!visitorId || visitorId === 'Loading...') return;
       
       if (typeof window !== 'undefined') {
-        
-        // ⚡ FIX: Cast to 'any' to allow experimental properties without build errors
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const nav = navigator as any;
 
@@ -83,7 +79,6 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
         };
 
         const rawData = {
-          // Now we can access properties safely without TS errors
           os_platform: nav.platform || 'Unknown',
           cpu_cores: nav.hardwareConcurrency || 0,
           ram_gb: nav.deviceMemory ? `~${nav.deviceMemory} GB` : 'Unknown',
@@ -210,18 +205,19 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
 
   // STATE: CHAT (GRANTED)
   return (
-    <div className="h-screen bg-[#fff0f5] flex flex-col font-sans overflow-hidden relative selection:bg-yellow-300 selection:text-black">
+    // FIX: Changed from h-screen to fixed inset-0 h-[100dvh] to lock scrolling on mobile
+    <div className="fixed inset-0 h-[100dvh] w-full bg-[#fff0f5] flex flex-col font-sans overflow-hidden relative selection:bg-yellow-300 selection:text-black">
         
         {/* Fun Background Pattern */}
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
 
         {/* HEADER */}
-        <div className="h-20 bg-white border-b-4 border-black flex items-center justify-between px-6 z-10 shadow-sm">
+        <div className="h-20 bg-white border-b-4 border-black flex items-center justify-between px-6 z-10 shadow-sm shrink-0">
             <div className="flex items-center gap-3">
                 <div className={`w-4 h-4 rounded-full border-2 border-black ${onlineUsers > 1 ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
                 <div>
                     <h1 className="text-2xl font-black italic tracking-tighter text-black leading-none">
-                        SECRET<span className="text-purple-500">CHAT</span>
+                        SECRET<span className="text-purple-500">CHAT &nbsp; <sup className='text-black'>twst.fun</sup></span>
                     </h1>
                     <div className="flex items-center gap-1 mt-1">
                         <span className={`text-[10px] font-black border-2 border-black px-2 py-0.5 rounded-full ${isCreator ? 'bg-black text-white' : 'bg-yellow-300 text-black'}`}>
@@ -237,7 +233,7 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
         </div>
 
         {/* MESSAGES AREA */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 relative z-0">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 relative z-0 overscroll-contain">
             {messages.length === 0 && (
                 <div className="h-full flex flex-col items-center justify-center opacity-50">
                     <div className="text-6xl mb-2">👻</div>
@@ -273,12 +269,12 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
         </div>
 
         {/* INPUT AREA */}
-        <div className="p-4 bg-white border-t-4 border-black z-10">
+        <div className="p-4 bg-white border-t-4 border-black z-10 shrink-0 pb-safe">
             <form onSubmit={handleSend} className="flex gap-3">
                 <input 
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder={isCreator ? "Command center..." : "Type secret..."}
+                    placeholder={isCreator ? "Type..." : "Type secret..."}
                     className="flex-1 bg-gray-100 border-2 border-black rounded-xl px-5 py-3 font-bold text-black placeholder-gray-400 focus:outline-none focus:bg-yellow-100 focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
                 />
                 <button 

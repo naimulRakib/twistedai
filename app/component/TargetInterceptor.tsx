@@ -80,7 +80,7 @@ export default function TargetInterceptor() {
 
         <h2 className="text-lg font-bold text-green-500 font-mono mb-6 flex items-center gap-2 tracking-widest border-b border-green-900/50 pb-4">
           <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-          TARGET INTERCEPTOR
+          TARGET BASED SECRET CHATTING 
         </h2>
 
         {/* INPUT AREA */}

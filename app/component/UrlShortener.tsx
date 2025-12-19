@@ -61,7 +61,7 @@ export default function UrlShortener() {
                 <div>
                     <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
                         <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                        URL  EVANESCO 
+                        URL SHORTEN
                     </h2>
                     <p className="text-xs text-gray-500 font-mono mt-1">Encrypted Redirect System</p>
                 </div>
@@ -73,7 +73,7 @@ export default function UrlShortener() {
             {/* Input Section */}
             <div className="space-y-4">
                 <div className="group/input">
-                    <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1 block group-focus-within/input:text-emerald-500 transition-colors">Target Destination</label>
+                    <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1 block group-focus-within/input:text-emerald-500 transition-colors">Target URL</label>
                     <div className="relative">
                         <input 
                             type="url" 

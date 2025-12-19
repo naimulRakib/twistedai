@@ -47,7 +47,7 @@ export default function DashboardOverview({
               </h1>
               
               <p className="text-white/90 text-sm font-medium max-w-md mx-auto mb-8 leading-relaxed">
-                  Share your private link. Let your friends confess, roast, or ask you anything anonymously. We'll handle the rest.
+                  Share your private link. Let your friends confess, roast, or ask you anything anonymously. We'll handle the rest. Click on menu or 3-lines option!
               </p>
 
               <button 
@@ -58,7 +58,13 @@ export default function DashboardOverview({
               </button>
           </div>
       </div>
-
+{/* MAIN TEXT: "We are offering!" */}
+          <h1 className="text-white font-black text-4xl md:text-5xl tracking-tight leading-tight mb-6 drop-shadow-lg ">
+            WE ARE &nbsp;
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500">
+              OFFERING :
+            </span>
+          </h1>
       {/* --- 2. FEATURE GRID (Cartoon Cards) --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 

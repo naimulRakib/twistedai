@@ -126,7 +126,7 @@ const SpyReportViewer: React.FC = () => {
             disabled={isLoading}
             className="px-6 py-2 bg-green-900/20 border border-green-500/30 text-green-400 font-bold rounded-lg hover:bg-green-500 hover:text-black transition-all uppercase tracking-wider text-xs disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'DECRYPTING...' : 'FETCH DATA'}
+            {isLoading ? 'DECRYPTING...' : 'UNLOCK DATA'}
           </button>
         </div>
 
