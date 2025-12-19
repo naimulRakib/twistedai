@@ -49,10 +49,7 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
           .eq('creator_user_id', user.id)
           .limit(1);
 
-        if (links && links.length > 0) {
-          // Construct the full URL automatically
-          setLinkUrl(`${window.location.origin}/p/${links[0].id}`);
-        }
+     
       }
     };
 
