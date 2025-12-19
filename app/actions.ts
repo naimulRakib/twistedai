@@ -129,20 +129,28 @@ export async function generateAndSaveImageAction(
 ) {
   console.log(`🎨 Generating with Model: [${modelKey}]`);
   
+  // Select Model Config FIRST to decide prompt strategy
+  const config = MODEL_MAP[modelKey] || MODEL_MAP['pollinations-turbo'];
+
   // 1. Smart Prompt Construction
   let finalPrompt = "";
   
   // Did the user give a specific visual command? (e.g. "Batman")
   if (userPrompt && userPrompt.length > 2) {
-     finalPrompt = `${userPrompt}, masterpiece, best quality, 8k, wallpaper`;
+     finalPrompt = `${userPrompt}, masterpiece, best quality, 8k, wallpaper, NO TEXT, NO WORDS`;
   } else {
      // No command? Pick a random style based on the Vibe
      const randomStyle = PREMIUM_STYLES[Math.floor(Math.random() * PREMIUM_STYLES.length)];
-     finalPrompt = `Abstract background art representing: "${message}". Style: ${randomStyle}. High contrast, 8k, cinematic lighting, no text, wallpaper.`;
+     
+     // ⚡ FIX: Nebius models (Flux) are very literal. If we include the message text in quotes, 
+     // it tries to write that text in the image. We skip the message string completely for Nebius.
+     if (config.provider === 'nebius') {
+         finalPrompt = `Abstract background art. Style: ${randomStyle}. High contrast, 8k, cinematic lighting, wallpaper, NO TEXT, NO WORDS`;
+     } else {
+         finalPrompt = `Abstract background art representing: "${message}". Style: ${randomStyle}. High contrast, 8k, cinematic lighting, wallpaper, NO TEXT, NO WORDS`;
+     }
   }
 
-  // Select Model Config
-  const config = MODEL_MAP[modelKey] || MODEL_MAP['pollinations-turbo'];
   let imageBuffer: Buffer;
 
   try {

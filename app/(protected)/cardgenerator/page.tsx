@@ -101,12 +101,12 @@ function CardGeneratorContent() {
   const getFontSize = (text: string, type: 'message' | 'reply') => {
     const len = text.length;
     if (type === 'message') {
-        if (len < 20) return "text-xl leading-tight";
-        if (len < 50) return "text-lg leading-tight";
-        if (len < 100) return "text-md leading-snug";
+        if (len < 20) return "text-md leading-tight";
+        if (len < 50) return "text-md leading-tight";
+        if (len < 100) return "text-base leading-snug";
         return "text-sm leading-relaxed";
     } else {
-        if (len < 30) return "text-xl leading-tight";
+        if (len < 30) return "text-md leading-tight";
         return "text-sm leading-relaxed";
     }
   };
@@ -333,7 +333,7 @@ function CardGeneratorContent() {
                 {/* Card Container */}
                 <div 
                     ref={cardRef}
-                    className={`relative ${selectedSize.ratio} w-full max-w-[340px] rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between p-8 transition-all duration-500 ease-in-out border-4
+                    className={`relative ${selectedSize.ratio} w-full max-w-[340px] rounded-xl overflow-hidden shadow-2xl flex flex-col justify-between p-8 transition-all duration-500 ease-in-out border-4
                         ${selectedFrame === 'paper' ? 'border-black bg-[#f4f4f0]' : 'border-white/10 bg-black'}
                     `}
                     style={{
@@ -351,7 +351,7 @@ function CardGeneratorContent() {
                     {backgroundImage && <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>}
                     
                     <div className="relative z-10 flex flex-col h-full justify-center space-y-6">
-                        <div className={`p-6 shadow-lg transform rotate-1 transition-all ${selectedFrame === 'social' ? 'bg-white rounded-3xl text-black text-center' : selectedFrame === 'paper' ? 'bg-white border-2 border-black text-black font-mono rounded-none' : 'bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white'}`}>
+                        <div className={`p-2 shadow-lg transform rotate-1 transition-all ${selectedFrame === 'social' ? 'bg-white rounded-3xl text-black text-center' : selectedFrame === 'paper' ? 'bg-white border-2 border-black text-black font-mono rounded-none' : 'bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white'}`}>
                             {/* --- CLEAN CONTENT USED HERE FOR VISUAL DISPLAY --- */}
                             <p className={`${getFontSize(cleanContent(importedMessage || message) || "Waiting...", 'message')} font-bold break-words leading-snug`}>
                                 {cleanContent(importedMessage || message) || 'Waiting for secret...'}
@@ -359,7 +359,7 @@ function CardGeneratorContent() {
                         </div>
 
                         {reply && (
-                            <div className={`transform -rotate-1 mt-4 transition-all ${selectedFrame === 'social' ? 'bg-black/60 backdrop-blur-md rounded-2xl p-4 text-white text-center' : selectedFrame === 'paper' ? 'bg-black text-white p-4 border-2 border-black font-mono' : 'bg-black/60 backdrop-blur-xl border-l-4 border-purple-500 p-4 rounded-r-xl shadow-lg'}`}>
+                            <div className={`transform -rotate-1 mt-4 transition-all ${selectedFrame === 'social' ? 'bg-black/60 backdrop-blur-md rounded-2xl p-2 text-white text-center' : selectedFrame === 'paper' ? 'bg-black text-white p-2 border-2 border-black font-mono' : 'bg-black/60 backdrop-blur-xl border-l-4 border-purple-500 p-2 rounded-r-xl shadow-lg'}`}>
                                 <p className={`${getFontSize(reply, 'reply')} font-bold mb-2 break-words leading-relaxed`}>{reply}</p>
                                 <p className={`text-[10px] uppercase tracking-widest opacity-70 ${selectedFrame === 'paper' ? 'font-mono' : 'font-sans'}`}>@{handle.replace('@','')}</p>
                             </div>
