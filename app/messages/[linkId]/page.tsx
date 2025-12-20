@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useParams } from 'next/navigation';
 // --- SPY IMPORTS ---
@@ -54,7 +54,6 @@ interface OwnerProfile {
 }
 
 // --- INTERFACE MODES CONFIGURATION ---
-// Updated types to include 'roast' and 'laugh'
 type InterfaceMode = 'secret' | 'question' | 'roast' | 'laugh';
 
 const MODE_CONFIG = {
@@ -86,7 +85,7 @@ const MODE_CONFIG = {
         buttonText: "Roast Me",
         icon: "🔥",
         limit: 1000,
-        fontStyle: "font-sans font-bold" // Slightly bolder text for roasts
+        fontStyle: "font-sans font-bold" 
     },
     laugh: {
         label: "Laugh", // Replaced Letter
@@ -120,8 +119,18 @@ export default function MessagePage() {
     const { visitorId } = useFingerprint();
     const [spyData, setSpyData] = useState<SpyData | null>(null);
 
+    // --- NOTIFICATION SOUND REF ---
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
     const params = useParams();
     const linkId = params.linkId as string;
+
+    // --- INIT SOUND ---
+    useEffect(() => {
+        // Pre-load the notification sound (Same one used in Dashboard for consistency)
+        audioRef.current = new Audio('https://cdn.freesound.org/previews/536/536108_1415754-lq.mp3');
+        if(audioRef.current) audioRef.current.volume = 0.4;
+    }, []);
 
     // --- 0. FETCH OWNER PROFILE (NEW LOGIC) ---
     useEffect(() => {
@@ -154,6 +163,27 @@ export default function MessagePage() {
         };
 
         fetchOwnerProfile();
+    }, [linkId]);
+
+    // --- ⚡ NEW: INCREMENT VIEW COUNT (Essential for View Notifications) ---
+    useEffect(() => {
+        if (!linkId) return;
+
+        // Check Session Storage so we don't count the same person refreshing 10 times
+        const hasViewed = typeof window !== 'undefined' ? sessionStorage.getItem(`viewed_${linkId}`) : null;
+
+        if (!hasViewed) {
+            const countView = async () => {
+                // Call the Secure RPC function we created in SQL
+                const { error } = await supabase.rpc('increment_views', { link_uuid: linkId });
+                if (!error) {
+                    sessionStorage.setItem(`viewed_${linkId}`, 'true');
+                } else {
+                    console.error("View Count Error:", error);
+                }
+            };
+            countView();
+        }
     }, [linkId]);
 
 
@@ -267,7 +297,7 @@ export default function MessagePage() {
         setSending(true);
         const nameToUse = authorName.trim() || "Anonymous";
 
-        // Prepend Mode Tag - UPDATED FOR NEW MODES
+        // Prepend Mode Tag
         let finalContent = newMessage;
         if (activeMode === 'question') finalContent = `[QUESTION] ${newMessage}`;
         if (activeMode === 'roast') finalContent = `[ROAST] ${newMessage}`;
@@ -286,10 +316,20 @@ export default function MessagePage() {
 
             if (error) throw error;
 
+            // --- PLAY NOTIFICATION SOUND ON SUCCESS ---
+            if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+                audioRef.current.play().catch(e => console.log("Audio Error:", e));
+            }
+
             setNewMessage("");
             setAuthorName("");
             fetchMessages();
             toast.success("Sent successfully! 🚀");
+            
+            // NOTE: If you have an external Notification API (like OneSignal or standard Email), 
+            // you would call it here: await fetch('/api/notify-owner', { method: 'POST', body: ... })
+
        } catch (err: any) {
         console.error("❌ FULL ERROR OBJECT:", err);
         toast.error(`Failed to send: ${err.message || "Check Console"}`);
@@ -346,7 +386,7 @@ export default function MessagePage() {
                     </p>
                 </div>
 
-                {/* --- INTERFACE SWITCHER (UPDATED ORDER) --- */}
+                {/* --- INTERFACE SWITCHER --- */}
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-1 flex justify-between relative backdrop-blur-md overflow-hidden">
                     {(['secret', 'question', 'roast', 'laugh'] as InterfaceMode[]).map((mode) => (
                         <button

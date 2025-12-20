@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import LinkGenerator from '../LinkGenerator/page';
 import LinkPage from '@/app/(protected)/linkhistory/page';
@@ -34,9 +34,19 @@ export default function DashboardPage() {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [id, setId]= useState('');
     
-    // --- NEW STATE FOR OVERVIEW ---
+    // --- NEW STATE FOR OVERVIEW & NOTIFICATIONS ---
     const [recentMessages, setRecentMessages] = useState<any[]>([]);
     const [realStats, setRealStats] = useState(stats);
+    const [unreadCount, setUnreadCount] = useState(0); // <--- NEW: Track Unread Messages
+    const [userLinkIds, setUserLinkIds] = useState<string[]>([]); // <--- NEW: Store Link IDs for Realtime
+
+    // Sound Ref for Notifications
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // Initialize Audio
+    useEffect(() => {
+        audioRef.current = new Audio('https://cdn.freesound.org/previews/536/536108_1415754-lq.mp3');
+    }, []);
 
     useEffect(() => {
         const getProfile = async () => {
@@ -65,17 +75,29 @@ export default function DashboardPage() {
                 const totalLinks = links?.length || 0;
                 const totalViews = links?.reduce((acc, curr) => acc + (curr.views || 0), 0) || 0;
                 const linkIds = links?.map(l => l.id) || [];
+                setUserLinkIds(linkIds); // Store for realtime filtering
 
                 let totalMessages = 0;
                 let recentMsgs: any[] = [];
+                let unread = 0;
 
                 if (linkIds.length > 0) {
+                     // 1. Get Total Count
                      const { count } = await supabase
                         .from('messages')
                         .select('*', { count: 'exact', head: true })
                         .in('link_id', linkIds);
                      totalMessages = count || 0;
 
+                     // 2. Get Unread Count (NEW)
+                     const { count: unreadData } = await supabase
+                        .from('messages')
+                        .select('*', { count: 'exact', head: true })
+                        .in('link_id', linkIds)
+                        .eq('is_read', false);
+                     unread = unreadData || 0;
+
+                     // 3. Get Recent Messages
                      const { data: msgs } = await supabase
                         .from('messages')
                         .select('*')
@@ -86,6 +108,7 @@ export default function DashboardPage() {
                      recentMsgs = msgs || [];
                 }
 
+                setUnreadCount(unread);
                 setRecentMessages(recentMsgs);
                 setRealStats([
                   { label: 'Total Views', value: totalViews.toLocaleString(), change: 'Live', icon: '👁️' },
@@ -102,6 +125,49 @@ export default function DashboardPage() {
 
         getProfile();
     }, []);
+
+    // --- REALTIME NOTIFICATION LISTENER ---
+    useEffect(() => {
+        if (userLinkIds.length === 0) return;
+
+        const channel = supabase
+            .channel('dashboard-notifications')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    // Filter isn't perfect for arrays in client, so we listen generally and verify link_id matches ours
+                    // or just assume if we get it, it's relevant (RLS usually handles this)
+                },
+                (payload) => {
+                    // Check if the new message belongs to one of our links
+                    if (userLinkIds.includes(payload.new.link_id)) {
+                        // Increment Unread Count
+                        setUnreadCount((prev) => prev + 1);
+                        
+                        // Increment Total Messages Count visual
+                        setRealStats(prev => prev.map(stat => 
+                            stat.label === 'Messages' 
+                            ? { ...stat, value: (parseInt(stat.value.replace(/,/g, '')) + 1).toLocaleString() }
+                            : stat
+                        ));
+
+                        // Play Notification Sound
+                        if (audioRef.current) {
+                            audioRef.current.currentTime = 0;
+                            audioRef.current.play().catch(() => {});
+                        }
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userLinkIds]);
 
 
   const [activeTab, setActiveTab] = useState('Overview');
@@ -203,7 +269,6 @@ export default function DashboardPage() {
           <div className="relative w-24 h-24 mb-4 group cursor-pointer">
             <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500 to-cyan-500 rounded-full blur opacity-40 group-hover:opacity-60 transition-opacity"></div>
             <div className="relative w-full h-full rounded-full p-[2px] bg-gradient-to-tr from-emerald-500 to-cyan-500 overflow-hidden">
-              {/* --- ⚡ KEY ADDED HERE FOR INSTANT UPDATE ⚡ --- */}
               <ProfileImage uid={id} key={profile?.avatar_url} />
             </div>
             <div className="absolute bottom-0 right-0 w-6 h-6 bg-black rounded-full flex items-center justify-center border-2 border-[#0a0a0a]">
@@ -217,7 +282,7 @@ export default function DashboardPage() {
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {[
                 { name: 'Overview', icon: '📊' },
-                { name: 'Inbox', icon: '📨', badge: 3 },
+                { name: 'Inbox', icon: '📨', badge: unreadCount > 0 ? unreadCount : undefined }, // <-- DYNAMIC BADGE
                 { name: 'Create Link', icon: '➕' },
                 { name: 'Share Card', icon: '👀' },
                 { name: 'Anonymous Chat', icon: '💬' },
@@ -239,7 +304,7 @@ export default function DashboardPage() {
                         {item.name}
                     </div>
                     {item.badge && (
-                        <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-bounce">
                             {item.badge}
                         </span>
                     )}
@@ -294,8 +359,14 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
                 <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center border border-white/5 transition-colors relative active:scale-95">
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                    
+                    {/* --- DYNAMIC NOTIFICATION DOT --- */}
+                    {unreadCount > 0 && (
+                        <>
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </>
+                    )}
                 </button>
             </div>
         </header>
