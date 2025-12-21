@@ -10,6 +10,7 @@ import { Buffer } from 'node:buffer';
 const NEBIUS_API_KEY = process.env.NEBIUS_API_KEY;
 const CLOUDFLARE_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const CLOUDFLARE_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
+const GROQ_API_KEY = process.env.GROQ_API_KEY; // <--- NEW
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,11 +38,10 @@ type Provider = 'nebius' | 'cloudflare' | 'pollinations';
 
 interface ModelConfig {
   provider: Provider;
-  id: string; // The ID sent to the API
-  name: string; // Human readable name
+  id: string; 
+  name: string; 
 }
 
-// You can pass these keys from your frontend dropdown
 const MODEL_MAP: Record<string, ModelConfig> = {
   // --- NEBIUS (High Quality) ---
   'nebius-flux': { provider: 'nebius', id: 'black-forest-labs/flux-schnell', name: 'Nebius Flux (Best)' },
@@ -58,7 +58,7 @@ const MODEL_MAP: Record<string, ModelConfig> = {
 };
 
 /* ============================================================
-   🚀 API CLIENTS
+   🚀 API CLIENTS (Image Generation)
 ============================================================ */
 
 // 1. NEBIUS CLIENT
@@ -90,29 +90,22 @@ async function runCloudflare(modelId: string, prompt: string): Promise<Buffer> {
     {
       method: "POST",
       headers: { Authorization: `Bearer ${CLOUDFLARE_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, num_steps: 4 }), // SDXL Lightning needs low steps
+      body: JSON.stringify({ prompt, num_steps: 4 }),
     }
   );
 
   if (!res.ok) throw new Error(`Cloudflare API Error: ${res.statusText}`);
-  
-  // CF returns raw binary data usually
   const arrayBuffer = await res.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
 
-// 3. POLLINATIONS CLIENT (Free)
+// 3. POLLINATIONS CLIENT
 async function runPollinations(modelId: string, prompt: string): Promise<Buffer> {
   const safePrompt = encodeURIComponent(prompt);
   const seed = Math.floor(Math.random() * 1000000);
-  
-  // URL GET Request
   const url = `https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1920&model=${modelId}&nologo=true&seed=${seed}`;
   
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0' } // Prevent bot blocking
-  });
-
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   if (!res.ok) throw new Error("Pollinations API Error");
   const arrayBuffer = await res.arrayBuffer();
   return Buffer.from(arrayBuffer);
@@ -122,28 +115,20 @@ async function runPollinations(modelId: string, prompt: string): Promise<Buffer>
    🎨 MAIN GENERATION ACTION
 ============================================================ */
 export async function generateAndSaveImageAction(
-  userPrompt: string, // Can be empty, or a specific command like "Naruto"
+  userPrompt: string, 
   message: string,
   reply: string,
-  modelKey: string = 'pollinations-turbo' // Default model
+  modelKey: string = 'pollinations-turbo'
 ) {
   console.log(`🎨 Generating with Model: [${modelKey}]`);
   
-  // Select Model Config FIRST to decide prompt strategy
   const config = MODEL_MAP[modelKey] || MODEL_MAP['pollinations-turbo'];
-
-  // 1. Smart Prompt Construction
   let finalPrompt = "";
   
-  // Did the user give a specific visual command? (e.g. "Batman")
   if (userPrompt && userPrompt.length > 2) {
      finalPrompt = `${userPrompt}, masterpiece, best quality, 8k, wallpaper, NO TEXT, NO WORDS`;
   } else {
-     // No command? Pick a random style based on the Vibe
      const randomStyle = PREMIUM_STYLES[Math.floor(Math.random() * PREMIUM_STYLES.length)];
-     
-     // ⚡ FIX: Nebius models (Flux) are very literal. If we include the message text in quotes, 
-     // it tries to write that text in the image. We skip the message string completely for Nebius.
      if (config.provider === 'nebius') {
          finalPrompt = `Abstract background art. Style: ${randomStyle}. High contrast, 8k, cinematic lighting, wallpaper, NO TEXT, NO WORDS`;
      } else {
@@ -154,7 +139,6 @@ export async function generateAndSaveImageAction(
   let imageBuffer: Buffer;
 
   try {
-    // 2. Route to Provider
     if (config.provider === 'nebius') {
         imageBuffer = await runNebius(config.id, finalPrompt);
     } else if (config.provider === 'cloudflare') {
@@ -163,13 +147,11 @@ export async function generateAndSaveImageAction(
         imageBuffer = await runPollinations(config.id, finalPrompt);
     }
 
-    // 3. Process Image (Compress & Resize for Mobile Stories)
     const processedBuffer = await sharp(imageBuffer)
-      .resize({ width: 850, height: 1511, fit: 'cover' }) // 9:16 Aspect Ratio
+      .resize({ width: 850, height: 1511, fit: 'cover' }) 
       .webp({ quality: 80 })
       .toBuffer();
 
-    // 4. Upload to Supabase
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.webp`;
     
     const { error: uploadError } = await supabase.storage
@@ -182,7 +164,6 @@ export async function generateAndSaveImageAction(
       .from("card-backgrounds")
       .getPublicUrl(fileName);
 
-    // 5. Save Record
     await supabase.from("cards").insert([
       { message, reply, prompt_used: finalPrompt, image_url: publicUrl },
     ]);
@@ -191,35 +172,69 @@ export async function generateAndSaveImageAction(
 
   } catch (error: any) {
     console.error("Generation Failed:", error);
-    // Fallback Placeholder if AI breaks
     return "https://placehold.co/1080x1920/101010/FFF.png?text=AI+Server+Busy";
   }
 }
 
 /* ============================================================
-   ⚡ TEXT UTILITIES (Pollinations GPT-4o-Mini)
+   ⚡ TEXT UTILITIES (Using GROQ 🚀)
 ============================================================ */
 
 export async function generateSuggestedRepliesAction(message: string) {
-  const prompt = `Generate 3 short, witty, Gen-Z style replies for the message: "${message}". 
-  Rules: If Bangla, reply Bangla. If English, reply English. 
-  Return ONLY a JSON array ["A", "B", "C"].`;
+  if (!GROQ_API_KEY) {
+    console.error("Missing GROQ_API_KEY");
+    return ["Nice!", "Cool", "Okay"];
+  }
 
   try {
-    const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai&seed=${Math.random()}`;
-    const res = await fetch(url);
-    const text = await res.text();
-    // Extract JSON from text
-    const match = text.match(/\[[\s\S]*\]/);
-    return match ? JSON.parse(match[0]) : ["Interesting...", "Tell me more", "Who is this?"];
-  } catch {
-    return ["Nice!", "Cool", "Okay"];
+    // We use the raw message but strip the tag for the AI context if needed, 
+    // though the AI usually handles tags fine.
+    const cleanMessage = message.replace(/^\[.*?\]\s*/, "");
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant", // Very fast, low latency
+        messages: [
+          {
+            role: "system",
+            content: "You are a witty, Gen-Z social media assistant. Respond ONLY with a JSON array of 3 short strings. Example: [\"Slay!\", \"No way 💀\", \"Bet\"]."
+          },
+          {
+            role: "user",
+            content: `Generate 3 short, funny, savage, or wholesome replies for this message: "${cleanMessage}". 
+            If the message is in Bengali (Banglish/Bangla), reply in that language. If English, use English.
+            Return ONLY the JSON array.`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 150,
+      }),
+    });
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    // Extract JSON array using Regex to be safe
+    const match = content.match(/\[[\s\S]*\]/);
+    if (match) {
+      return JSON.parse(match[0]);
+    } else {
+      console.error("Groq JSON Parse Fail", content);
+      return ["Loading...", "Error", "Try Again"];
+    }
+
+  } catch (error) {
+    console.error("Groq API Error:", error);
+    return ["Interesting...", "Tell me more", "Who is this?"];
   }
 }
 
 // Simple Prompt Improver for the Frontend
 export async function generatePromptAction(message: string, reply: string) {
-   // We don't really need this anymore since logic is inside generateAndSaveImageAction
-   // But keeping it for compatibility if your UI calls it
    return ""; 
 }
