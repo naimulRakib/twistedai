@@ -13,7 +13,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // <--- New State
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
   
   // Username Availability State
@@ -47,6 +47,7 @@ export default function SignUpPage() {
                 setIsAvailable(true);
             }
         } catch (error) {
+            // If error implies no row found, it's available
             setIsAvailable(true);
         } finally {
             setIsChecking(false);
@@ -65,13 +66,25 @@ export default function SignUpPage() {
       // Basic Validations
       if (!isAvailable) return toast.info("Please choose a valid, unique handle.");
       if (password.length < 6) return toast.info("Password must be at least 6 characters.");
-      
-      // <--- New Validation
       if (password !== confirmPassword) return toast.info("Passwords do not match.");
 
       setLoading(true);
 
       try {
+          // --- STEP A: Pre-check Email Availability ---
+          // We check the 'profiles' table first to see if this email is already linked to a profile.
+          const { data: existingUser } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('email', email)
+            .single();
+
+          if (existingUser) {
+            setLoading(false);
+            return toast.error("This email is already registered. Please login.");
+          }
+
+          // --- STEP B: Attempt Supabase Auth Sign Up ---
           const { data: authData, error: authError } = await supabase.auth.signUp({
               email,
               password,
@@ -84,9 +97,16 @@ export default function SignUpPage() {
 
           if (authError) throw authError;
 
+          // --- STEP C: Check for "Fake Success" ---
+          // If "Email Enumeration Protection" is ON in Supabase, it returns a user object
+          // but with an empty identities array if the email is already taken.
+          if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+              return toast.error("This email is already taken. Please login.");
+          }
+
           console.log('✅ Sign-up successful!');
           
-          toast.success("Registered. Now confirm your mail...");
+          toast.success("Registered! Check your inbox...");
           router.push('/verify');
 
       } catch (error: any) {
@@ -202,7 +222,7 @@ export default function SignUpPage() {
                 <button
                   type="button" 
                   onClick={toggleVisibility}
-                  className="absolute inset-y-0 right-0 px-3 flex items-center text-sm leading-5 hover:bg-gray-100 rounded-r-lg"
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-sm leading-5 hover:bg-gray-100/10 rounded-r-lg"
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
@@ -210,7 +230,7 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* CONFIRM PASSWORD (NEW SECTION) */}
+            {/* CONFIRM PASSWORD */}
             <div className="space-y-1 group">
               <label className="text-xs font-mono text-gray-400 ml-1">CONFIRM PASSPHRASE</label>
               <div className="relative">
@@ -221,21 +241,19 @@ export default function SignUpPage() {
                   onChange={e => setConfirmPassword(e.target.value)}
                   className={`w-full bg-black/40 border rounded-xl px-4 py-3 pl-11 text-white placeholder-gray-600 focus:outline-none focus:bg-black/60 transition-all ${
                     confirmPassword && password !== confirmPassword 
-                      ? "border-red-500/50 focus:border-red-500" // Red border if they don't match
+                      ? "border-red-500/50 focus:border-red-500" 
                       : "border-white/10 focus:border-emerald-500/50"
                   }`}
                 />
-                 {/* Optional: Add toggle here too so user can click either eye to show both */}
                 <button
                   type="button" 
                   onClick={toggleVisibility}
-                  className="absolute inset-y-0 right-0 px-3 flex items-center text-sm leading-5 hover:bg-gray-100 rounded-r-lg"
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-sm leading-5 hover:bg-gray-100/10 rounded-r-lg"
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
                 <svg className="w-5 h-5 text-gray-500 absolute left-3 top-3.5 group-focus-within:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
-               {/* Validation Hint */}
                {confirmPassword && password !== confirmPassword && (
                  <p className="text-xs text-red-400 ml-1">Passwords do not match</p>
                )}
