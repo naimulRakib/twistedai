@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import LinkGenerator from '../LinkGenerator/page';
 import LinkPage from '@/app/(protected)/linkhistory/page';
-import LinkViewPage from '../../messages/page';
+import LinkViewPage from '../messages/page';
 import { supabase } from '@/lib/supabaseClient';
 import SpyReportViewer from '@/app/component/Spy';
 import AvatarUpload from '@/app/component/AvatarUpload';

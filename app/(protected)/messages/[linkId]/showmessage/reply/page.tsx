@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { generatePromptAction, generateAndSaveImageAction, generateSuggestedRepliesAction } from '../../../../actions';
+import { generatePromptAction, generateAndSaveImageAction, generateSuggestedRepliesAction } from '../../../../../actions';
 
 interface Props {
   importedMessage?: string; 
