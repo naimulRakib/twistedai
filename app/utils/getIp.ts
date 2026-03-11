@@ -1,20 +1,26 @@
 import { headers } from 'next/headers';
 
-// 1. Make function ASYNC
-export async function getUserIp() {
-  
-  // 2. Add AWAIT here
-  const headersList = await headers(); 
-  
-  const forwardedFor = headersList.get('x-forwarded-for');
+/**
+ * Server-side IP extraction from request headers.
+ * Works in Next.js Route Handlers and Server Components.
+ */
+export async function getUserIp(): Promise<string> {
+  const headersList = await headers();
 
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
-  }
+  // Prioritized header checks (proxy-aware)
+  const candidates = [
+    headersList.get('cf-connecting-ip'),     // Cloudflare
+    headersList.get('x-real-ip'),            // Nginx
+    headersList.get('x-forwarded-for'),      // Proxy chains
+    headersList.get('x-client-ip'),
+  ];
 
-  const realIp = headersList.get('x-real-ip');
-  if (realIp) {
-    return realIp.trim();
+  for (const candidate of candidates) {
+    if (candidate) {
+      // x-forwarded-for can be a comma-separated list — take the first
+      const ip = candidate.split(',')[0].trim();
+      if (ip && ip !== '::1' && ip !== '127.0.0.1') return ip;
+    }
   }
 
   return '127.0.0.1';
