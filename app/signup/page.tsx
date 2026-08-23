@@ -106,8 +106,8 @@ export default function SignUpPage() {
 
           console.log('✅ Sign-up successful!');
           
-          toast.success("Registered! Check your inbox...");
-          router.push('/verify');
+          toast.success("Registered! Welcome to Twisted.");
+          router.push('/dashboard');
 
       } catch (error: any) {
           console.error('❌ Sign-up failed:', error.message);
