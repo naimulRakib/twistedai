@@ -38,6 +38,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const cleanContent = (content: string) =>
   content.replace(/^\[(ROAST|LAUGH|QUESTION|IDEA|LETTER)\]\s*/, "");
 
+interface PublicMessage {
+  id: bigint | string | number;
+  content: string;
+  reply?: string | null;
+  created_at: Date | string;
+}
+
 export default async function PublicInboxPage({ params }: Props) {
   const { linkId } = await params;
 
@@ -124,7 +131,7 @@ export default async function PublicInboxPage({ params }: Props) {
         {/* Messages */}
         <div className="space-y-8">
           {messages && messages.length > 0 ? (
-            messages.map((msg, index) => (
+            messages.map((msg: PublicMessage, index: number) => (
               <div
                 key={String(msg.id)}
                 className="animate-in fade-in slide-in-from-bottom-8 duration-700"
