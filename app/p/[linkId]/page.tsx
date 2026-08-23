@@ -1,6 +1,6 @@
 // app/p/[linkId]/page.tsx — Public inbox page (server component)
 // Uses Prisma to bypass RLS for reliable server-side data fetching
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { Metadata } from "next";
 
@@ -11,17 +11,20 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { linkId } = await params;
 
-  const link = await prisma.links.findUnique({
-    where: { id: linkId },
-    select: { creator_user_id: true },
-  });
+  const { data: link } = await supabase
+    .from("links")
+    .select("creator_user_id")
+    .eq("id", linkId)
+    .single();
 
   let username = "Someone";
   if (link?.creator_user_id) {
-    const profile = await prisma.profiles.findUnique({
-      where: { id: link.creator_user_id },
-      select: { username: true },
-    });
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", link.creator_user_id)
+      .single();
+      
     if (profile?.username) username = profile.username;
   }
 
@@ -39,7 +42,7 @@ const cleanContent = (content: string) =>
   content.replace(/^\[(ROAST|LAUGH|QUESTION|IDEA|LETTER)\]\s*/, "");
 
 interface PublicMessage {
-  id: bigint | string | number;
+  id: string | number;
   content: string;
   reply?: string | null;
   created_at: Date | string;
@@ -49,10 +52,11 @@ export default async function PublicInboxPage({ params }: Props) {
   const { linkId } = await params;
 
   // Fetch the link
-  const linkData = await prisma.links.findUnique({
-    where: { id: linkId },
-    select: { is_public_inbox: true, creator_user_id: true, name: true },
-  });
+  const { data: linkData } = await supabase
+    .from("links")
+    .select("is_public_inbox, creator_user_id, name")
+    .eq("id", linkId)
+    .single();
 
   // Lock screen: private or not found
   if (!linkData || !linkData.is_public_inbox) {
@@ -77,10 +81,11 @@ export default async function PublicInboxPage({ params }: Props) {
   }
 
   // Fetch profile
-  const profile = await prisma.profiles.findUnique({
-    where: { id: linkData.creator_user_id },
-    select: { username: true, avatar_url: true },
-  });
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username, avatar_url")
+    .eq("id", linkData.creator_user_id)
+    .single();
 
   const displayName = profile?.username ?? "Anonymous";
   const avatarUrl =
@@ -88,25 +93,14 @@ export default async function PublicInboxPage({ params }: Props) {
     `https://api.dicebear.com/9.x/micah/svg?seed=${displayName}`;
 
   // Fetch public messages — is_public = true only
-  const rawMessages = await prisma.messages.findMany({
-    where: {
-      link_id: linkId,
-      is_public: true,   // ✅ strictly public only
-    },
-    orderBy: { created_at: "desc" },
-    select: {
-      id: true,
-      content: true,
-      reply: true,
-      created_at: true,
-    },
-  });
+  const { data: messagesData } = await supabase
+    .from("messages")
+    .select("id, content, reply, created_at")
+    .eq("link_id", linkId)
+    .eq("is_public", true)
+    .order("created_at", { ascending: false });
 
-  // Next.js Server Components crash if BigInt is in the payload. Convert it.
-  const messages = rawMessages.map(msg => ({
-    ...msg,
-    id: msg.id.toString(),
-  }));
+  const messages = messagesData || [];
 
   return (
     <div className="min-h-screen bg-[#030303] text-white font-sans py-10 px-4 relative">
