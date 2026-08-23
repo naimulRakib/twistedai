@@ -1,8 +1,14 @@
 // app/p/[linkId]/page.tsx — Public inbox page (server component)
 // Uses Prisma to bypass RLS for reliable server-side data fetching
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { Metadata } from "next";
+
+// Use service role to bypass RLS for server-side fetching (equivalent to Prisma behavior)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 type Props = {
   params: Promise<{ linkId: string }>;
