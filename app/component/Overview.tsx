@@ -21,7 +21,7 @@ interface Props {
 export default function DashboardOverview({ 
   profile, 
   totalMessages,
-  
+  onNavigate,
 }: Props) {
 
   return (
@@ -70,7 +70,7 @@ export default function DashboardOverview({
 
         {/* INBOX CARD */}
         <div 
-         
+            onClick={() => onNavigate('Inbox')}
             className="bg-[#1a1a1a] border-4 border-[#2a2a2a] rounded-[30px] p-6 cursor-pointer hover:border-pink-500 transition-all group relative overflow-hidden"
         >
             <div className="absolute right-[-20px] bottom-[-20px] text-[80px] opacity-10 group-hover:opacity-20 transition-opacity grayscale group-hover:grayscale-0">📬</div>
@@ -87,25 +87,25 @@ export default function DashboardOverview({
             </div>
         </div>
 
-        {/* AI REPLY CARD */}
+        {/* ANONYMOUS CHAT CARD (Replaced Smart Reply) */}
         <div 
-          
-            className="bg-[#1a1a1a] border-4 border-[#2a2a2a] rounded-[30px] p-6 cursor-pointer hover:border-purple-500 transition-all group relative overflow-hidden"
+            onClick={() => onNavigate('Anonymous Chat')}
+            className="bg-[#1a1a1a] border-4 border-[#2a2a2a] rounded-[30px] p-6 cursor-pointer hover:border-blue-500 transition-all group relative overflow-hidden"
         >
-            <div className="absolute right-[-20px] bottom-[-20px] text-[80px] opacity-10 group-hover:opacity-20 transition-opacity grayscale group-hover:grayscale-0">🤖</div>
+            <div className="absolute right-[-20px] bottom-[-20px] text-[80px] opacity-10 group-hover:opacity-20 transition-opacity grayscale group-hover:grayscale-0">💬</div>
             <div>
-                <h3 className="text-2xl font-black text-white group-hover:text-purple-400 transition-colors">Smart Reply</h3>
-                <p className="text-gray-500 text-xs font-bold mt-1">AI WITTY COMEBACKS</p>
+                <h3 className="text-2xl font-black text-white group-hover:text-blue-400 transition-colors">Anonymous Chat</h3>
+                <p className="text-gray-500 text-xs font-bold mt-1">SPECIFIC SENDER ONLY</p>
             </div>
             <div className="mt-4 flex gap-2">
-                <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-1 rounded-lg">✨ Savage</span>
-                <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-1 rounded-lg">❤️ Calm</span>
+                <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-1 rounded-lg">👻 Live</span>
+                <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-1 rounded-lg">🔒 Secure</span>
             </div>
         </div>
 
         {/* STORY CARD */}
         <div 
-       
+            onClick={() => onNavigate('Share Card')}
             className="bg-[#1a1a1a] border-4 border-[#2a2a2a] rounded-[30px] p-6 cursor-pointer hover:border-orange-500 transition-all group relative overflow-hidden"
         >
              <div className="absolute right-[-20px] bottom-[-20px] text-[80px] opacity-10 group-hover:opacity-20 transition-opacity grayscale group-hover:grayscale-0">📸</div>
@@ -123,7 +123,7 @@ export default function DashboardOverview({
 
         {/* SPY MODE */}
         <div 
-         
+            onClick={() => onNavigate('Smart Reply')}
             className="bg-[#1a1a1a] border-4 border-[#2a2a2a] rounded-[30px] p-6 cursor-pointer hover:border-green-500 transition-all group relative overflow-hidden"
         >
             <div className="absolute right-[-20px] bottom-[-20px] text-[80px] opacity-10 group-hover:opacity-20 transition-opacity grayscale group-hover:grayscale-0">🕵️</div>
