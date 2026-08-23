@@ -1,0 +1,21 @@
+
+"use client"
+import NewItem from "./component/NewItem";
+import dynamic from 'next/dynamic';
+
+const MapDisplay = dynamic(() => import('./component/MapDisplay'), { 
+  ssr: false 
+});
+
+
+export default function Home() {
+  return (
+    <>
+      <MapDisplay />
+      <NewItem />
+    
+
+ 
+    </>
+  );
+}

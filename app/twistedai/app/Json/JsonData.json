@@ -1,0 +1,59 @@
+{
+  "users": [
+    {
+      "userId": "user001",
+      "name": "John Doe",
+      "location": {
+        "lat": 40.7128,
+        "lng": -74.0060,
+        "address": "New York, NY, USA",
+        "timestamp": "2024-01-15T10:30:00Z"
+      }
+    },
+    {
+      "userId": "user002", 
+      "name": "Jane Smith",
+      "location": {
+        "lat": 51.5074,
+        "lng": -0.1278,
+        "address": "London, UK",
+        "timestamp": "2024-01-15T11:45:00Z"
+      }
+    },
+    {
+      "userId": "user003",
+      "name": "Bob Johnson", 
+      "location": {
+        "lat": 35.6762,
+        "lng": 139.6503,
+        "address": "Tokyo, Japan",
+        "timestamp": "2024-01-15T12:15:00Z"
+      }
+    },
+    {
+      "userId": "user004",
+      "name": "Alice Brown",
+      "location": {
+        "lat": -33.8688,
+        "lng": 151.2093,
+        "address": "Sydney, Australia",
+        "timestamp": "2024-01-15T13:20:00Z"
+      }
+    },
+    {
+      "userId": "user005",
+      "name": "Charlie Wilson",
+      "location": {
+        "lat": 48.8566,
+        "lng": 2.3522,
+        "address": "Paris, France",
+        "timestamp": "2024-01-15T14:10:00Z"
+      }
+    }
+  ],
+  "metadata": {
+    "totalUsers": 5,
+    "lastUpdated": "2024-01-15T14:10:00Z",
+    "version": "1.0"
+  }
+}
