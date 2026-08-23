@@ -1,7 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
-
-const supabaseUrl=process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-export const supabase = createClient(supabaseUrl, supabaseKey)
+// ✅ Uses @supabase/ssr for proper auth persistence in Next.js
+// This ensures cookies/session are maintained correctly client-side
+export const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
