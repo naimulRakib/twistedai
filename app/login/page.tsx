@@ -213,25 +213,6 @@ export default function LoginPage() {
             
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-[#0f0f0f] px-2 text-gray-500 rounded-full">Or continue as</span></div>
-          </div>
-
-          {/* GUEST MODE BUTTON */}
-          <Link href="/cardgenerator">
-            <button className="w-full bg-white/5 border border-white/10 text-gray-300 font-semibold py-3 rounded-xl hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 group">
-              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center group-hover:bg-green-500/30 transition">
-                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-              </div>
-              <div className="text-left">
-                <div className="text-xs text-gray-500 font-normal">No account?</div>
-                <div>Use Guest Mode</div>
-              </div>
-              <svg className="w-4 h-4 text-gray-500 ml-auto group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-            </button>
-          </Link>
         </div>
 
         {/* Footer Link */}
