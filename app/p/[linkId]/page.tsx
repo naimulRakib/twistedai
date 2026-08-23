@@ -6,8 +6,8 @@ import { Metadata } from "next";
 
 // Use service role to bypass RLS for server-side fetching (equivalent to Prisma behavior)
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
+  process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder_key"
 );
 
 type Props = {
