@@ -88,7 +88,7 @@ export default async function PublicInboxPage({ params }: Props) {
     `https://api.dicebear.com/9.x/micah/svg?seed=${displayName}`;
 
   // Fetch public messages — is_public = true only
-  const messages = await prisma.messages.findMany({
+  const rawMessages = await prisma.messages.findMany({
     where: {
       link_id: linkId,
       is_public: true,   // ✅ strictly public only
@@ -101,6 +101,12 @@ export default async function PublicInboxPage({ params }: Props) {
       created_at: true,
     },
   });
+
+  // Next.js Server Components crash if BigInt is in the payload. Convert it.
+  const messages = rawMessages.map(msg => ({
+    ...msg,
+    id: msg.id.toString(),
+  }));
 
   return (
     <div className="min-h-screen bg-[#030303] text-white font-sans py-10 px-4 relative">
