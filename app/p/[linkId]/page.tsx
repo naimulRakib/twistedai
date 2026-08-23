@@ -1,5 +1,6 @@
-// app/p/[linkId]/page.tsx
-import { supabase } from "@/lib/supabaseClient";
+// app/p/[linkId]/page.tsx — Public inbox page (server component)
+// Uses Prisma to bypass RLS for reliable server-side data fetching
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Metadata } from "next";
 
@@ -10,20 +11,18 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { linkId } = await params;
 
-  const { data: link } = await supabase
-    .from("links")
-    .select("creator_user_id")
-    .eq("id", linkId)
-    .single();
+  const link = await prisma.links.findUnique({
+    where: { id: linkId },
+    select: { creator_user_id: true },
+  });
 
   let username = "Someone";
   if (link?.creator_user_id) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("username")
-      .eq("id", link.creator_user_id)
-      .single();
-    if (profile) username = profile.username;
+    const profile = await prisma.profiles.findUnique({
+      where: { id: link.creator_user_id },
+      select: { username: true },
+    });
+    if (profile?.username) username = profile.username;
   }
 
   return {
@@ -42,33 +41,23 @@ const cleanContent = (content: string) =>
 export default async function PublicInboxPage({ params }: Props) {
   const { linkId } = await params;
 
-  const { data: linkData, error: linkError } = await supabase
-    .from("links")
-    .select("is_public_inbox, creator_user_id")
-    .eq("id", linkId)
-    .single();
-
-  let profile = { username: "Anonymous", avatar_url: null as string | null };
-  if (linkData) {
-    const { data: p } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", linkData.creator_user_id)
-      .single();
-    if (p) profile = p;
-  }
+  // Fetch the link
+  const linkData = await prisma.links.findUnique({
+    where: { id: linkId },
+    select: { is_public_inbox: true, creator_user_id: true, name: true },
+  });
 
   // Lock screen: private or not found
-  if (linkError || !linkData || !linkData.is_public_inbox) {
+  if (!linkData || !linkData.is_public_inbox) {
     return (
       <div className="min-h-screen bg-[#030303] flex flex-col items-center justify-center text-white p-4">
         <div className="text-6xl mb-6 animate-pulse">🔒</div>
-        <h1 className="text-3xl font-black mb-2 tracking-tight">Access Denied</h1>
+        <h1 className="text-3xl font-black mb-2 tracking-tight">This Inbox is Private</h1>
         <p className="text-gray-500 mb-8 text-center max-w-md">
-          This inbox is private.
+          The owner hasn&apos;t made this inbox public yet.
           <br />
           <span className="text-xs opacity-50">
-            (Or the owner hasn&apos;t toggled it Public yet)
+            Ask them to enable &quot;Public Inbox&quot; from their dashboard.
           </span>
         </p>
         <Link href="/">
@@ -80,14 +69,31 @@ export default async function PublicInboxPage({ params }: Props) {
     );
   }
 
-  // ✅ FIX: Only fetch messages where is_public is NOT false
-  // (NULL = unset = visible by default, true = explicitly public)
-  const { data: messages } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("link_id", linkId)
-    .neq("is_public", false)          // ← hides messages the owner marked private
-    .order("created_at", { ascending: false });
+  // Fetch profile
+  const profile = await prisma.profiles.findUnique({
+    where: { id: linkData.creator_user_id },
+    select: { username: true, avatar_url: true },
+  });
+
+  const displayName = profile?.username ?? "Anonymous";
+  const avatarUrl =
+    profile?.avatar_url ??
+    `https://api.dicebear.com/9.x/micah/svg?seed=${displayName}`;
+
+  // Fetch public messages — is_public = true only
+  const messages = await prisma.messages.findMany({
+    where: {
+      link_id: linkId,
+      is_public: true,   // ✅ strictly public only
+    },
+    orderBy: { created_at: "desc" },
+    select: {
+      id: true,
+      content: true,
+      reply: true,
+      created_at: true,
+    },
+  });
 
   return (
     <div className="min-h-screen bg-[#030303] text-white font-sans py-10 px-4 relative">
@@ -104,12 +110,12 @@ export default async function PublicInboxPage({ params }: Props) {
         <div className="text-center mb-12 animate-in fade-in slide-in-from-top-5 duration-700">
           <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-emerald-500 to-purple-600 p-[3px] mb-4 shadow-2xl">
             <img
-              src={profile.avatar_url || `https://api.dicebear.com/9.x/micah/svg?seed=${profile.username}`}
+              src={avatarUrl}
               className="w-full h-full rounded-full bg-black object-cover"
               alt="Profile"
             />
           </div>
-          <h1 className="text-3xl font-black tracking-tighter">@{profile.username}</h1>
+          <h1 className="text-3xl font-black tracking-tighter">@{displayName}</h1>
           <p className="text-emerald-500 text-xs font-bold uppercase tracking-[0.3em] mt-2">
             Public Inbox Exposed
           </p>
@@ -120,7 +126,7 @@ export default async function PublicInboxPage({ params }: Props) {
           {messages && messages.length > 0 ? (
             messages.map((msg, index) => (
               <div
-                key={msg.id}
+                key={String(msg.id)}
                 className="animate-in fade-in slide-in-from-bottom-8 duration-700"
                 style={{ animationDelay: `${index * 80}ms` }}
               >
@@ -146,7 +152,7 @@ export default async function PublicInboxPage({ params }: Props) {
                     <div className="bg-gradient-to-br from-emerald-600 to-emerald-900 text-white rounded-[24px] rounded-tr-sm p-4 sm:p-5 max-w-[90%] shadow-[0_10px_30px_rgba(16,185,129,0.15)] relative hover:scale-[1.02] transition">
                       <div className="flex items-center gap-2 mb-2 opacity-80">
                         <img
-                          src={profile.avatar_url || `https://api.dicebear.com/9.x/micah/svg?seed=${profile.username}`}
+                          src={avatarUrl}
                           className="w-4 h-4 rounded-full bg-black object-cover"
                           alt=""
                         />
@@ -165,7 +171,10 @@ export default async function PublicInboxPage({ params }: Props) {
           ) : (
             <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl bg-white/5">
               <div className="text-4xl mb-2">👻</div>
-              <p className="text-gray-500">Inbox is empty... for now.</p>
+              <p className="text-gray-500 font-medium">No public messages yet.</p>
+              <p className="text-gray-600 text-xs mt-1">
+                The owner hasn&apos;t made any messages public yet.
+              </p>
             </div>
           )}
         </div>
