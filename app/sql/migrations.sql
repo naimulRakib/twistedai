@@ -14,10 +14,11 @@ DROP TABLE IF EXISTS public.cards          CASCADE;
 DROP TABLE IF EXISTS public.notes          CASCADE;
 DROP TABLE IF EXISTS public.profiles       CASCADE;
 
--- Drop old functions
-DROP FUNCTION IF EXISTS public.increment_views(UUID);
-DROP FUNCTION IF EXISTS public.increment_short_link_clicks(TEXT);
-DROP FUNCTION IF EXISTS public.handle_new_user();
+-- Drop old functions (CASCADE removes dependent triggers)
+DROP FUNCTION IF EXISTS public.increment_views(UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.increment_short_link_clicks(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS public.set_updated_at() CASCADE;
 
 
 -- ============================================================

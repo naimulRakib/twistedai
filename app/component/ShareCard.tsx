@@ -3,6 +3,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
+const THEMES = [
+  { id: 'classic', name: 'Twisted', background: 'linear-gradient(to bottom, #0f172a, #312e81, #4c1d95)' },
+  { id: 'cyber', name: 'Cyberpunk', background: 'linear-gradient(135deg, #2b033d, #8a0b5c, #e51d45)' },
+  { id: 'neon', name: 'Neon Glow', background: 'linear-gradient(135deg, #001f18, #005a49, #00b388)' },
+  { id: 'ruby', name: 'Ruby', background: 'linear-gradient(135deg, #300609, #86101c, #ec2633)' },
+  { id: 'minimal', name: 'Dark Mode', background: '#050505' },
+];
+
 // --- PROPS INTERFACE ---
 interface ShareCardProps {
   username?: string;
@@ -16,6 +24,7 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
   const [linkUrl, setLinkUrl] = useState("");
   const [profileImage, setProfileImage] = useState(avatarUrl || "");
   const [coverImage, setCoverImage] = useState(""); 
+  const [activeTheme, setActiveTheme] = useState(THEMES[0]);
   const [loading, setLoading] = useState(false);
   const [copyStatus, setCopyStatus] = useState("Copy Link");
 
@@ -225,6 +234,34 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
                 </div>
             </div>
 
+            {/* Theme Selector */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Card Theme</label>
+                    {coverImage && (
+                        <button onClick={() => setCoverImage("")} className="text-[10px] text-red-400 hover:text-red-300">
+                            Clear Background Image
+                        </button>
+                    )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {THEMES.map((theme) => (
+                        <button
+                            key={theme.id}
+                            onClick={() => { setActiveTheme(theme); setCoverImage(""); }}
+                            style={{ background: theme.background }}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-lg transition-all ${
+                                activeTheme.id === theme.id && !coverImage
+                                    ? 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-[#0a0a0a] scale-105'
+                                    : 'opacity-70 hover:opacity-100 hover:scale-105 border border-white/10'
+                            }`}
+                        >
+                            {theme.name}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             <div className="h-px bg-white/10 my-4"></div>
 
             {/* Share Buttons */}
@@ -262,6 +299,31 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
                 </button>
             </div>
 
+            {/* Instagram Instructions */}
+            <div className="mt-8 bg-blue-900/10 border border-blue-500/20 rounded-2xl p-5">
+                <h3 className="text-blue-400 font-bold text-sm mb-3 flex items-center gap-2">
+                    📱 How to post on Instagram Story
+                </h3>
+                <ul className="text-xs text-gray-400 space-y-2 font-medium">
+                    <li className="flex items-start gap-2">
+                        <span className="text-blue-500 font-bold">1.</span>
+                        <span>Click <strong className="text-white">Save to Gallery</strong> to download your card.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <span className="text-blue-500 font-bold">2.</span>
+                        <span>Open Instagram Story and select the saved card image.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <span className="text-blue-500 font-bold">3.</span>
+                        <span>Tap the <strong>Sticker</strong> icon at the top and select <strong>🔗 Link</strong>.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <span className="text-blue-500 font-bold">4.</span>
+                        <span>Paste your link and place the sticker over the dotted box on the card!</span>
+                    </li>
+                </ul>
+            </div>
+
         </div>
       </div>
 
@@ -278,11 +340,10 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
                 ref={cardRef}
                 className="relative w-[320px] h-[568px] bg-black rounded-[32px] overflow-hidden flex flex-col items-center text-center shadow-2xl border border-white/10"
                 style={{
-                    // --- DARKISH BACKGROUND ---
-                    // Deep dark gradient
-                    backgroundImage: coverImage 
+                    // --- THEME OR CUSTOM BACKGROUND ---
+                    background: coverImage 
                       ? `url(${coverImage})` 
-                      : 'linear-gradient(to bottom, #0f172a, #312e81, #4c1d95)', 
+                      : activeTheme.background, 
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                 }}
