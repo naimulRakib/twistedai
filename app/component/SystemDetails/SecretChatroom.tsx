@@ -1,5 +1,5 @@
 import React from 'react';
-import { Scan, Lock, ShieldCheck, AlertTriangle, Terminal } from 'lucide-react';
+import { Scan, Lock, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 const SecurityExplainer = () => {
   return (
@@ -59,7 +59,7 @@ const SecurityExplainer = () => {
               <Lock className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-              <span className="text-emerald-500/50 text-sm font-mono">02.</span> The "Ghost" Room
+              <span className="text-emerald-500/50 text-sm font-mono">02.</span> The &quot;Ghost&quot; Room
             </h3>
             <p className="text-slate-400 text-sm leading-relaxed">
               You create a very secret chatroom. This room is locked to everyone except <strong className="text-slate-200">you</strong> (the creator) and the <strong className="text-slate-200">specific biometric profile</strong> of that message sender.

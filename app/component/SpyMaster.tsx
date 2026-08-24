@@ -4,10 +4,30 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
 
+interface SpyData {
+  ip?: string;
+  city?: string;
+  country?: string;
+  os_platform?: string;
+  screen_res?: string;
+  cpu_cores?: number;
+  battery_level?: number;
+  is_charging?: boolean;
+  masterId?: string;
+  gpu?: string;
+}
+
+interface SpyMessage {
+  id: string;
+  content: string;
+  created_at: string;
+  spy?: SpyData;
+}
+
 export default function SpyMasterSearch() {
-    const toast =useToast();
+    const toast = useToast();
   const [masterIdInput, setMasterIdInput] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SpyMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
@@ -30,8 +50,8 @@ export default function SpyMasterSearch() {
       if (error) throw error;
       setResults(messages || []);
 
-    } catch (e: any) {
-      console.error("Search Error:", e.message);
+    } catch (e: unknown) {
+      console.error("Search Error:", (e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -104,7 +124,7 @@ export default function SpyMasterSearch() {
                         
                         {/* Message Content */}
                         <p className="text-white font-medium text-lg leading-relaxed mb-4">
-                            "{msg.content}"
+                            &quot;{msg.content}&quot;
                         </p>
                         
                         {/* Footer: Spy Details */}

@@ -10,9 +10,14 @@ interface Message {
   reply?: string;
 }
 
+interface Profile {
+  username?: string;
+  avatar_url?: string;
+}
+
 interface Props {
-  profile: any;
-  totalMessages: number; // We can still show badges even if "no data" is the focus
+  profile: Profile | null;
+  totalMessages: number;
   totalLinks: number;
   recentMessages: Message[];
   onNavigate: (tab: string) => void;
@@ -47,7 +52,7 @@ export default function DashboardOverview({
               </h1>
               
               <p className="text-white/90 text-sm font-medium max-w-md mx-auto mb-8 leading-relaxed">
-                  Share your private link. Let your friends confess, roast, or ask you anything anonymously. We'll handle the rest. Click on menu or 3-lines option!
+                  Share your private link. Let your friends confess, roast, or ask you anything anonymously. We&apos;ll handle the rest. Click on menu or 3-lines option!
               </p>
 
               <button 

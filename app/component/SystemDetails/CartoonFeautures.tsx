@@ -58,7 +58,7 @@ const CartoonFeatures = () => {
       <div className="max-w-4xl mx-auto text-center mb-16 pt-10 font-cartoon">
         <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-yellow-300 border-4 border-black text-black font-black uppercase tracking-wider mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform -rotate-2 hover:rotate-2 transition-transform">
           <Zap className="w-5 h-5 fill-black" />
-          <span>It's Magic Time!</span>
+          <span>It&apos;s Magic Time!</span>
         </div>
         
         <h2 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight drop-shadow-sm">
@@ -68,7 +68,7 @@ const CartoonFeatures = () => {
         
         <p className="text-xl md:text-2xl text-gray-700 font-bold max-w-2xl mx-auto">
           From AI-powered insults (jk, replies!) to secret spy modes. 
-          It's the ultimate toolkit for your anonymous empire.
+          It&apos;s the ultimate toolkit for your anonymous empire.
         </p>
       </div>
 
@@ -111,7 +111,7 @@ const CartoonFeatures = () => {
                 </div>
                 <div className="space-y-3">
                   <div className="h-16 bg-gray-100 rounded-xl border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-500 font-bold">
-                    "Message Preview Area"
+                    &quot;Message Preview Area&quot;
                   </div>
                   <div className="flex gap-2">
                     <button className="flex-1 bg-purple-500 text-white font-bold py-2 rounded-xl border-2 border-black hover:bg-purple-600">Style 1</button>
@@ -221,7 +221,7 @@ const CartoonFeatures = () => {
               <h3 className="text-2xl font-black text-white text-stroke-black">Viral Cards</h3>
             </div>
             <p className="text-white font-bold mb-6 text-lg">
-              Optimized for Insta & FB stickers. 3 Premium frames included!
+              Optimized for Insta &amp; FB stickers. 3 Premium frames included!
             </p>
             
             <div className="flex justify-center gap-3">

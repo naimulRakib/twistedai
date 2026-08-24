@@ -153,7 +153,7 @@ const MapDisplay: FC<MapDisplayProps> = ({
 
   // Optimize data loading
   const userData = useMemo(() => {
-    return (UserLocationData as any).users as UserLocation[]; 
+    return (UserLocationData as { users: UserLocation[] }).users;
   }, []);
 
   return (

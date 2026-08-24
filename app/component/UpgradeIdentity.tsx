@@ -16,8 +16,7 @@ export default function UpgradeIdentity() {
     setLoading(true);
 
     try {
-      // 1. Update the Anonymous User with Email/Password
-      const { data, error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         email: email,
         password: password,
         // Optional: Update metadata to remove "is_anonymous" flag/display name
@@ -32,9 +31,10 @@ export default function UpgradeIdentity() {
       // 2. Success State
       setStep('success');
 
-    } catch (error: any) {
-      console.error("Upgrade Failed:", error.message);
-      alert("Error: " + error.message);
+    } catch (e: unknown) {
+      const err = e as Error;
+      console.error("Upgrade Failed:", err.message);
+      alert("Error: " + err.message);
     } finally {
       setLoading(false);
     }

@@ -68,7 +68,7 @@ function PrivacyContent() {
     <div className="space-y-8">
       <section>
         <h3 className="text-white text-2xl font-bold mb-4">1. The Data We Snitch On</h3>
-        <p>We are transparent about being a "Device Detective." When you use Twisted, we automatically collect:</p>
+        <p>We are transparent about being a &quot;Device Detective.&quot; When you use Twisted, we automatically collect:</p>
         <ul className="list-disc pl-5 space-y-2">
           <li><strong>Device Vitals:</strong> Battery percentage, charging status, and device model.</li>
           <li><strong>Digital Footprint:</strong> IP address, browser type, and approximate location (City/Country level).</li>

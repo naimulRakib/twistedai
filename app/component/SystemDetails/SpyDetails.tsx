@@ -39,7 +39,7 @@ const CartoonSpyMode = () => {
               <Laugh className="w-12 h-12 text-yellow-600 drop-shadow-md" />
             </div>
             <p className="text-lg text-yellow-800 font-bold leading-snug ml-6">
-              "This mode is just for fun and will be disabled as soon as possible!"
+              &quot;This mode is just for fun and will be disabled as soon as possible!&quot;
             </p>
           </div>
 
@@ -51,7 +51,7 @@ const CartoonSpyMode = () => {
                 Ethical Note!
               </div>
               <p className="text-red-800 font-medium">
-                Accessing public data is unethical; however, we ensure that no harm is done here. You cannot access others' messaging data using random message IDs! Only the channel creator can access Spy Data!
+                Accessing public data is unethical; however, we ensure that no harm is done here. You cannot access others&apos; messaging data using random message IDs! Only the channel creator can access Spy Data!
               </p>
             </div>
             
@@ -90,13 +90,13 @@ const CartoonSpyMode = () => {
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <MessageCircle className="w-8 h-8 text-blue-500 transform -scale-x-100" />
-                  <div className="bg-white border-2 border-blue-400 p-4 rounded-2xl rounded-tl-none shadow-sm">
-                    "<span className="text-purple-600 font-extrabold">Hey Mac user, so rich, huh?</span>"
+                   <div className="bg-white border-2 border-blue-400 p-4 rounded-2xl rounded-tl-none shadow-sm">
+                    &quot;<span className="text-purple-600 font-extrabold">Hey Mac user, so rich, huh?</span>&quot;
                   </div>
                 </div>
                 <div className="flex items-start gap-3 justify-end">
                   <div className="bg-white border-2 border-orange-400 p-4 rounded-2xl rounded-tr-none shadow-sm text-right">
-                    "Hey, <span className="text-orange-600 font-extrabold">Cumilla insider! How is it going?</span>"
+                    &quot;Hey, <span className="text-orange-600 font-extrabold">Cumilla insider! How is it going?</span>&quot;
                   </div>
                   <MessageCircle className="w-8 h-8 text-orange-500" />
                 </div>
@@ -108,7 +108,7 @@ const CartoonSpyMode = () => {
           <div className="flex items-center gap-4 justify-center p-4 bg-purple-200 border-4 border-dashed border-purple-400 rounded-xl transform -rotate-1">
             <Ghost className="w-8 h-8 text-purple-600 animate-bounce" />
             <p className="text-purple-800 font-bold text-lg">
-              <span className="text-purple-600 font-extrabold underline decoration-wavy">Fun fact:</span> It won't remain an anonymous chat for much longer, haha!
+              <span className="text-purple-600 font-extrabold underline decoration-wavy">Fun fact:</span> It won&apos;t remain an anonymous chat for much longer, haha!
             </p>
           </div>
 

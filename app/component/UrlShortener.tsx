@@ -37,8 +37,8 @@ export default function UrlShortener() {
       // 3. Set Result
       setShortUrl(`${window.location.origin}/s/${slug}`);
 
-    } catch (e: any) {
-      alert("System Error: " + e.message);
+    } catch (e: unknown) {
+      alert("System Error: " + (e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -128,7 +128,7 @@ export default function UrlShortener() {
                         </div>
                     </div>
                     <p className="text-center text-[10px] text-gray-600 mt-3 font-mono">
-                        // LINK WILL REDIRECT ANONYMOUSLY
+                        {/* LINK WILL REDIRECT ANONYMOUSLY */}
                     </p>
                 </div>
             )}

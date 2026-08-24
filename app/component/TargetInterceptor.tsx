@@ -59,10 +59,11 @@ export default function TargetInterceptor() {
       
       toast.success("Target Locked & Identified.");
 
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const e = err as Error;
       console.error(err);
       setError("Tracing failed.");
-      toast.error("Trace Error: " + err.message);
+      toast.error("Trace Error: " + e.message);
     } finally {
       setLoading(false);
     }

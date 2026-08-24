@@ -50,15 +50,6 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
           if (profile.username) setDisplayName(profile.username);
           if (profile.avatar_url) setProfileImage(profile.avatar_url);
         }
-
-        // 3. Fetch Their Link (So they don't have to type it!)
-        const { data: links } = await supabase
-          .from('links')
-          .select('id')
-          .eq('creator_user_id', user.id)
-          .limit(1);
-
-     
       }
     };
 
@@ -66,7 +57,7 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
     if (!username && !avatarUrl) {
         fetchUserData();
     }
-  }, []);
+  }, [username, avatarUrl]);
 
   // --- AUTO-UPDATE IF PROPS CHANGE (For parent component updates) ---
   useEffect(() => {

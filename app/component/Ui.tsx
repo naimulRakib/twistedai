@@ -135,7 +135,7 @@ export default function HomeUI() {
                <div className="bg-white rounded-2xl p-6 text-center shadow-lg mb-6 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-purple-500"></div>
                   <p className="text-gray-900 font-bold text-lg mb-2">Send me anonymous messages!</p>
-                  <p className="text-gray-500 text-sm">I won't know who sent it...</p>
+                  <p className="text-gray-500 text-sm">I won&apos;t know who sent it...</p>
                </div>
 
                {/* Input Mockup */}

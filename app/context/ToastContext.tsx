@@ -25,15 +25,15 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 const ToastItem = ({ id, message, type, onClose }: Toast & { onClose: (id: number) => void }) => {
   const [isExiting, setIsExiting] = useState(false);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsExiting(true);
-    setTimeout(() => onClose(id), 400); // Wait for exit animation
-  };
+    setTimeout(() => onClose(id), 400);
+  }, [id, onClose]);
 
   useEffect(() => {
     const timer = setTimeout(handleClose, 4000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [handleClose]);
 
   // 🎨 CARTOON STYLES
   const styles = {

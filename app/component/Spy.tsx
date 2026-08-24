@@ -68,9 +68,10 @@ const SpyReportViewer: React.FC = () => {
       } else {
         setError(`No spy data found for ID: ${messageId}`);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       console.error('Fetch Error:', e);
-      setError(`Access Denied: ${e.message || 'Unknown error'}`);
+      setError(`Access Denied: ${err.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
       isFetching.current = false;
@@ -81,7 +82,7 @@ const SpyReportViewer: React.FC = () => {
     if (e.key === 'Enter') fetchReport();
   };
 
-  const DataRow = ({ label, value, highlight = false }: { label: string; value: any; highlight?: boolean }) => (
+  const DataRow = ({ label, value, highlight = false }: { label: string; value: string | number | boolean | null | undefined; highlight?: boolean }) => (
     <div className="flex justify-between items-start border-b border-green-900/30 pb-1.5 mb-1.5 last:border-0 gap-3">
       <span className="text-gray-500 font-mono text-[11px] shrink-0">{label}:</span>
       <span className={`font-mono text-right break-all text-[11px] ${highlight ? 'text-green-400 font-bold' : 'text-gray-300'}`}>
