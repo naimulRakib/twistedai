@@ -17,7 +17,7 @@ interface ChatMessage {
 }
 
 interface Props {
-  masterId: string;
+  messageId: string;
   creatorId: string;
 }
 
@@ -110,7 +110,7 @@ function BrowserWall() {
 }
 
 // ─── Main Chat Component ───────────────────────────────────────────────────────
-export default function SecureSpyChat({ masterId, creatorId }: Props) {
+export default function SecureSpyChat({ messageId, creatorId }: Props) {
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [browserBlocked, setBrowserBlocked]         = useState(false);
@@ -119,6 +119,7 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
   const [adminUserId, setAdminUserId]               = useState<string | null>(null);
   const [creatorUsername, setCreatorUsername]       = useState<string>('CREATOR');
   const [senderName, setSenderName]                 = useState<string>('SENDER');
+  const [masterId, setMasterId]                     = useState<string>(''); // Extracted from message
   const [messages, setMessages]                     = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage]                 = useState('');
   const [onlineUsers, setOnlineUsers]               = useState(0);
@@ -158,20 +159,37 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
 
   // ── 2. ACCESS CONTROL (hard lock, no bypass) ───────────────────────────────
   useEffect(() => {
-    if (!masterId || !creatorId) return;
+    if (!messageId || !creatorId) return;
 
     const verifyAccess = async () => {
-      // A. Creator check: must be authenticated AND match creatorId
+      // Step 1: Fetch the original message to get the device hash (master_id) and alias
+      const { data: msgRow, error: msgError } = await supabase
+        .from('messages')
+        .select('spy, author_name')
+        .eq('id', messageId)
+        .single();
+      
+      if (msgError || !msgRow || !msgRow.spy?.masterId) {
+        log('❌ Message or device hash not found.');
+        setAccessStatus('DENIED');
+        return;
+      }
+      
+      const targetMasterId = msgRow.spy.masterId;
+      setMasterId(targetMasterId);
+      if (msgRow.author_name) setSenderName(msgRow.author_name);
+
+      // Step 2: Creator check — must be authenticated AND match creatorId
       const { data: { user } } = await supabase.auth.getUser();
       if (user && user.id.trim() === creatorId.trim()) {
         log('✅ Creator identity confirmed.');
         setIsCreator(true);
         setAdminUserId(user.id);
         setAccessStatus('GRANTED');
-        return;
+        return; // Creator bypasses biometric check
       }
 
-      // B. Sender biometric check — wait for FingerprintJS
+      // Step 3: Sender biometric check — wait for FingerprintJS
       if (!visitorId || visitorId === 'Loading...') return;
 
       const nav = navigator as Navigator & {
@@ -201,21 +219,11 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
 
       try {
         const currentDeviceHash = await generateClientMasterId(rawData);
-        if (currentDeviceHash === masterId) {
+        if (currentDeviceHash === targetMasterId) {
           log('✅ Biometric fingerprint matched — access granted.');
-
-          // Fetch the sender's author_name from the original message
-          const { data: msgRow } = await supabase
-            .from('messages')
-            .select('author_name')
-            .contains('spy', { masterId })
-            .limit(1)
-            .single();
-          if (msgRow?.author_name) setSenderName(msgRow.author_name);
-
           setAccessStatus('GRANTED');
         } else {
-          log(`❌ Hash mismatch. Expected: ${masterId.substring(0, 8)}... Got: ${currentDeviceHash.substring(0, 8)}...`);
+          log(`❌ Hash mismatch. Expected: ${targetMasterId.substring(0, 8)}... Got: ${currentDeviceHash.substring(0, 8)}...`);
           setAccessStatus('DENIED');
         }
       } catch (err) {
@@ -225,7 +233,7 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
     };
 
     verifyAccess();
-  }, [visitorId, masterId, creatorId, log]);
+  }, [visitorId, messageId, creatorId, log]);
 
   // ── 3. REALTIME CHAT ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -235,17 +243,17 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
       const { data } = await supabase
         .from('live_chat')
         .select('*')
-        .eq('master_id', masterId)
+        .eq('master_id', messageId) // use messageId as the chat room identifier
         .order('created_at', { ascending: false })
         .limit(50);
       if (data) setMessages(data.reverse() as ChatMessage[]);
     };
     fetchMessages();
 
-    const channel = supabase.channel(`room:${masterId}`)
+    const channel = supabase.channel(`room:${messageId}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'live_chat',
-        filter: `master_id=eq.${masterId}`,
+        filter: `master_id=eq.${messageId}`,
       }, (payload) => {
         setMessages(prev => [...prev, payload.new as ChatMessage]);
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -260,7 +268,7 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
       });
 
     return () => { supabase.removeChannel(channel); };
-  }, [accessStatus, masterId]);
+  }, [accessStatus, messageId]);
 
   // ── 4. LOAD HISTORY ───────────────────────────────────────────────────────
   const loadHistory = async () => {
@@ -270,7 +278,7 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
       const { data } = await supabase
         .from('live_chat')
         .select('*')
-        .eq('master_id', masterId)
+        .eq('master_id', messageId)
         .order('created_at', { ascending: false })
         .range(50, 200);
       if (data) setHistoryMessages(data.reverse() as ChatMessage[]);
@@ -295,7 +303,7 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
     try {
       await supabase.from('live_chat').insert([{
         content:         text,
-        master_id:       masterId,
+        master_id:       messageId,
         sender_name:     isCreator ? creatorUsername.toUpperCase() : senderName.toUpperCase(),
         creator_user_id: isCreator ? adminUserId : null,
       }]);
@@ -319,7 +327,7 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const slug = generateSlug(6);
-      const fullChatroomUrl = `${window.location.origin}/live/${masterId}/${creatorId}`;
+      const fullChatroomUrl = `${window.location.origin}/live/${messageId}/${creatorId}`;
 
       await supabase.from('short_links').insert({
         slug,
@@ -479,9 +487,7 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
             {historyMessages.length === 0
               ? <p className="text-center text-xs text-gray-600 font-mono">No older messages found.</p>
               : historyMessages.map((msg) => {
-                const isMe = isCreator
-                  ? msg.sender_name === creatorUsername.toUpperCase()
-                  : msg.sender_name !== creatorUsername.toUpperCase();
+                const isMe = isCreator ? !!msg.creator_user_id : !msg.creator_user_id;
                 return (
                   <div key={`h-${msg.id}`} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} opacity-50`}>
                     <div className={`max-w-[85%] px-4 py-2.5 text-sm font-medium border border-white/10 rounded-2xl ${isMe ? 'bg-emerald-900/30 text-emerald-200 rounded-br-none' : 'bg-white/5 text-gray-300 rounded-bl-none'}`}>
@@ -508,9 +514,7 @@ export default function SecureSpyChat({ masterId, creatorId }: Props) {
 
         {/* Live messages */}
         {messages.map((msg) => {
-          const isMe = isCreator
-            ? msg.sender_name === creatorUsername.toUpperCase()
-            : msg.sender_name !== creatorUsername.toUpperCase();
+          const isMe = isCreator ? !!msg.creator_user_id : !msg.creator_user_id;
 
           return (
             <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-in slide-in-from-bottom-3 fade-in duration-200`}>
