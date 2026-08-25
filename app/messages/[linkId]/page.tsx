@@ -340,9 +340,11 @@ export default function MessagePage() {
                 type="text"
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
-                placeholder="Your Alias e.g. Ghost (Optional)"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition-all"
+                placeholder="Nickname (optional) — e.g. Ghost, Bestie..."
+                maxLength={30}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition-all placeholder-gray-600"
               />
+              <p className="text-[10px] text-gray-600 ml-1">Leave blank to stay fully anonymous</p>
             </div>
 
             <textarea
