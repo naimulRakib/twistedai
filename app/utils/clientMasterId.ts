@@ -1,4 +1,14 @@
-export async function generateClientMasterId(spyData: any) {
+interface SpyRawData {
+  os_platform: string;
+  cpu_cores: number;
+  ram_gb: string;
+  gpu: string;
+  screen_res: string;
+  pixel_ratio: number;
+  [key: string]: unknown;
+}
+
+export async function generateClientMasterId(spyData: SpyRawData): Promise<string> {
   // 1. Select the stable hardware traits (Same logic as server)
   const stableTraits = [
     spyData.os_platform,

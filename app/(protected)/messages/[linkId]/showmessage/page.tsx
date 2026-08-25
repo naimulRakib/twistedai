@@ -37,6 +37,30 @@ const getMessageDetails = (content: string) => {
 const cleanContent = (content: string) =>
   content.replace(/^\[(ROAST|LAUGH|QUESTION|IDEA|LETTER)\]\s*/, "");
 
+/** Render text with clickable hyperlinks */
+function renderLinks(text: string): React.ReactNode[] {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  const testRegex = /(https?:\/\/[^\s]+)/;
+  return parts.map((part, i) => {
+    if (testRegex.test(part)) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-emerald-400 underline hover:text-emerald-300 break-all"
+          onClick={e => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
 // ─── Three-dot dropdown (click-outside aware) ──────────────────────────────
 interface DropdownMenuProps {
   msgId: number;
@@ -582,7 +606,7 @@ const MessageViewPage = () => {
                               </button>
                             </div>
                             <p className="text-sm text-gray-300 border-l-2 border-emerald-500/50 pl-3 break-words">
-                              {msg.reply}
+                              {renderLinks(msg.reply)}
                             </p>
                             {/* Generate Card CTA */}
                             <div className="pt-2">
