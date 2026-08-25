@@ -310,7 +310,11 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
                     </li>
                     <li className="flex items-start gap-2">
                         <span className="text-blue-500 font-bold">4.</span>
-                        <span>Paste your link and place the sticker over the dotted box on the card!</span>
+                        <span>Paste your <strong>anonymous link</strong> and place it on the top box.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <span className="text-blue-500 font-bold">5.</span>
+                        <span>Paste your <strong>public inbox link (twst.fun/p/...)</strong> and place it on the bottom box!</span>
                     </li>
                 </ul>
             </div>
@@ -356,11 +360,11 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
                     </div>
 
                     {/* Center Content */}
-                    <div className="flex flex-col items-center gap-4 my-auto w-full">
+                    <div className="flex flex-col items-center gap-3 my-auto w-full">
                         
                         {/* Profile Pic with Glow */}
-                        <div className="relative">
-                            <div className="w-24 h-24 rounded-full p-[3px] bg-white/90 relative z-10 shadow-xl">
+                        <div className="relative mt-2">
+                            <div className="w-20 h-20 rounded-full p-[3px] bg-white/90 relative z-10 shadow-xl">
                                 <img 
                                     src={profileImage || `https://api.dicebear.com/9.x/identicon/svg?seed=${displayName || 'Twisted'}`} 
                                     className="w-full h-full rounded-full object-cover bg-black"
@@ -370,33 +374,42 @@ export default function ShareCardGenerator({ username, avatarUrl }: ShareCardPro
                             </div>
                         </div>
 
-                        {/* Name Tag - MOVED NEAR PROFILE */}
-                        <div className="bg-white/10 px-6 py-2 rounded-full border border-white/10 shadow-lg backdrop-blur-md -mt-2 relative z-20">
-                            <p className="text-sm font-bold text-white">
+                        {/* Name Tag */}
+                        <div className="bg-white/10 px-5 py-1.5 rounded-full border border-white/10 shadow-lg backdrop-blur-md -mt-2 relative z-20">
+                            <p className="text-xs font-bold text-white">
                                 @{displayName || "Twisted Agent"}
                             </p>
                         </div>
 
                         {/* Glass Question Box */}
-                        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl w-full shadow-lg relative overflow-hidden mt-2">
-                            <h2 className="text-xl font-bold text-white leading-tight drop-shadow-md">
-                                Send me a <br/> <span className="font-black text-2xl text-emerald-300">SECRET MESSAGE</span>
+                        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-5 rounded-3xl w-full shadow-lg relative overflow-hidden mt-1">
+                            <h2 className="text-lg font-bold text-white leading-tight drop-shadow-md">
+                                Send me a <br/> <span className="font-black text-xl text-emerald-300">SECRET MESSAGE</span>
                             </h2>
-                            <p className="text-[10px] text-white/70 mt-2 font-bold tracking-wide uppercase bg-black/20 inline-block px-2 py-1 rounded">
+                            <p className="text-[9px] text-white/70 mt-2 font-bold tracking-wide uppercase bg-black/20 inline-block px-2 py-1 rounded">
                                 🕵️ I won't know it's you
                             </p>
                         </div>
 
                     </div>
 
-                    {/* Bottom CTA (BLANK STICKER BOX) */}
-                    <div className="mt-auto pt-6  relative z-20 w-full flex flex-col items-center gap-3">
-                         {/* BLANK BOX for Sticker */}
-                         <div className="bg-white/80 backdrop-blur-sm border-2 border-dashed border-white/50 rounded-xl shadow-lg w-full max-w-[260px] h-14">
+                    {/* Bottom CTA (TWO STICKER BOXES) */}
+                    <div className="mt-auto pt-4 relative z-20 w-full flex flex-col items-center gap-3">
+                         {/* Send Message Area */}
+                         <div className="w-full flex flex-col items-center gap-1">
+                             <p className="text-[9px] font-bold text-white uppercase tracking-widest drop-shadow-md">👇 Send Message Here</p>
+                             <div className="bg-white/80 backdrop-blur-sm border-2 border-dashed border-white/50 rounded-xl shadow-lg w-full max-w-[240px] h-11 flex items-center justify-center">
+                                 <span className="text-black/30 font-bold text-[10px] uppercase tracking-wider">Paste Link Sticker</span>
+                             </div>
                          </div>
                             
-                         {/* Arrow */}
-                         <svg className="w-6 h-6 text-white/70 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                         {/* View Replies Area */}
+                         <div className="w-full flex flex-col items-center gap-1">
+                             <p className="text-[9px] font-bold text-emerald-300 uppercase tracking-widest drop-shadow-md">👇 View Replies Here</p>
+                             <div className="bg-emerald-500/80 backdrop-blur-sm border-2 border-dashed border-emerald-300 rounded-xl shadow-lg w-full max-w-[240px] h-11 flex items-center justify-center">
+                                 <span className="text-black/40 font-bold text-[10px] uppercase tracking-wider">Paste Link Sticker</span>
+                             </div>
+                         </div>
                     </div>
 
                 </div>
